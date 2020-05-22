@@ -33,6 +33,7 @@ import kkgreat.Kankyou;
 import kkgreat.Kanri;
 import kkgreat.KanriDel;
 import kkgreat.utility.Utility;
+import kkgreat.RequestDto;
 import net.sf.jasperreports.engine.JasperExportManager;
 import net.sf.jasperreports.engine.JasperFillManager;
 import net.sf.jasperreports.engine.JasperPrint;
@@ -56,6 +57,52 @@ public class KanriFacadeREST extends AbstractFacade<Kanri> {
     }
     
     /*
+    * ログイン後チェック処理_1_2
+    * 未確認書類の有無
+    * 検索条件：ログインID=申請者、status = 0、dlvry = '受渡'
+    * 郵送かつstatus0書類の有無
+    * 検索条件：検索条件：ログインID=申請者、status = 0、dlvry = '郵送'
+    */
+    @TokenSecurity
+    @POST
+    @Path("getinitchknotchk")
+    @Consumes({"application/json"})
+    @Produces({"application/json"})
+    public RequestDto getInitChkNotChk(Kanri entity) {
+        // チェック_1
+        TypedQuery<Long> q1 = getEntityManager().createNamedQuery("Kanri.findNotChk", Long.class);
+        q1.setParameter("loginId", entity.getUserId());
+        Long cnt1 = (Long)q1.getSingleResult();
+        // チェック_2
+        TypedQuery<Long> q2 = getEntityManager().createNamedQuery("Kanri.findDlvryChk", Long.class);
+        q2.setParameter("loginId", entity.getUserId());
+        Long cnt2 = (Long)q2.getSingleResult();
+        System.out.println(cnt2);
+        
+        RequestDto dto = new RequestDto();
+        Long[] paramLongs = { cnt1, cnt2 };
+        dto.setParamLongs(paramLongs);
+        return dto;
+    }
+    
+    /*
+    * ログイン後チェック処理_3
+    * 不備書類の有無
+    * 検索条件：ログインID=入力担当者、status = 3　
+    */
+    @TokenSecurity
+    @POST
+    @Path("getinitchkfubi")
+    @Consumes({"application/json"})
+    @Produces({"text/plain"})
+    public Long getInitChkFubi(Kanri entity) {
+        TypedQuery<Long> q = getEntityManager().createNamedQuery("Kanri.findFubi", Long.class);
+        q.setParameter("loginId", entity.getUserId());
+        Long cnt = (Long)q.getSingleResult();
+        return cnt;
+    }
+    
+    /*
     * データテーブルリスト用ログイン時初期化
     * Select条件が初期化で決まっているSQL句を実行する
     * KanriEntity名前付きクエリー実行
@@ -67,7 +114,16 @@ public class KanriFacadeREST extends AbstractFacade<Kanri> {
     public List<Kanri> getInitList(Kanri entity) {
         TypedQuery<Kanri> q = getEntityManager().createNamedQuery("Kanri.defaultSelect", Kanri.class);
         q.setParameter("userId", entity.getUserId());
-        
+        // 書類Status絞込み条件分岐　未確認もしくは書類不備のどちらかのみが初期一覧表示となる。
+        if (Objects.equals(Const.STATUS_NG, Long.toString(entity.getStatus())) ) {
+            Long[] ids = {3L};
+            List<Long> statusIdsList = new ArrayList<Long>(Arrays.asList(ids));
+            q.setParameter("statusIds", statusIdsList);
+        } else {
+            Long[] ids = {0L, 3L};
+            List<Long> statusIdsList = new ArrayList<Long>(Arrays.asList(ids));
+            q.setParameter("statusIds", statusIdsList);
+        }
         return q.setFirstResult(0)
                 .setMaxResults(entity.getLimit())
                 .getResultList();
