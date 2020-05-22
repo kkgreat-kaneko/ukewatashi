@@ -30,7 +30,8 @@ import javax.xml.bind.annotation.XmlRootElement;
     @NamedQuery(name = "Kanri.findById", query = "SELECT k FROM Kanri k WHERE k.id = :id"),
     @NamedQuery(name = "Kanri.defaultSelect", query = "select k from Kanri k " 
             + "where (k.tantoushaUserId = :userId OR k.shinseishaUserId = :userId) "
-            + "and k.status in (0, 3) and k.statusApp in (0, 10) order by k.id DESC"),
+            //+ "and k.status in (0, 3) and k.statusApp in (0, 10) order by k.id DESC"),
+            + "and k.status in :statusIds and k.statusApp in (0, 10) order by k.id DESC"),
     @NamedQuery(name = "Kanri.maxId", query = "SELECT MAX(v.id) from Kanri v"),
     @NamedQuery(name = "Kanri.approveKanries", query = "UPDATE Kanri k "
             + "SET k.statusApp = :statusValue, k.shouninsha = :shouninsha, k.shouninbi = :shouninbi "
@@ -45,6 +46,12 @@ import javax.xml.bind.annotation.XmlRootElement;
             + "and k.status IN (0, 3) "
             + "and k.id >= :id "
             + "order by k.hokengaisha , k.hokenTantou, k.dlvry, k.id"),
+    @NamedQuery(name = "Kanri.findNotChk", query = "SELECT COUNT(k.id) FROM Kanri k "
+            + "WHERE k.shinseishaUserId = :loginId  AND k.status = 0 AND k.dlvry = '受渡'"),
+    @NamedQuery(name = "Kanri.findDlvryChk", query = "SELECT COUNT(k.id) FROM Kanri k "
+            + "WHERE k.shinseishaUserId = :loginId  AND k.status = 0 AND k.dlvry = '郵送'"),
+    @NamedQuery(name = "Kanri.findFubi", query = "SELECT COUNT(k.id) FROM Kanri k "
+            + "WHERE k.shinseishaUserId = :loginId  AND k.status = 3"),
     /*
     @NamedQuery(name = "Kanri.findByStatus", query = "SELECT k FROM Kanri k WHERE k.status = :status"),
     @NamedQuery(name = "Kanri.findByStatusApp", query = "SELECT k FROM Kanri k WHERE k.statusApp = :statusApp"),
