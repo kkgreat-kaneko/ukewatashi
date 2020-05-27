@@ -26,7 +26,7 @@ public class JwtAuthorization {
         try {
             Date expireTime = new Date();
             //expireTime.setTime(expireTime.getTime() + 600000l);//ミリ単位　10分プラス
-            expireTime.setTime(expireTime.getTime() + 86400000l);//ミリ単位　24プラス時間
+            expireTime.setTime(expireTime.getTime() + 172800000l);//ミリ単位　48プラス時間
                     
             Algorithm algorithm = Algorithm.HMAC256("secret");
             String token = JWT.create()
