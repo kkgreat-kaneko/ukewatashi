@@ -52,6 +52,9 @@ import javax.xml.bind.annotation.XmlRootElement;
             + "WHERE k.shinseishaUserId = :loginId  AND k.status = 0 AND k.dlvry = '郵送'"),
     @NamedQuery(name = "Kanri.findFubi", query = "SELECT COUNT(k.id) FROM Kanri k "
             + "WHERE k.shinseishaUserId = :loginId  AND k.status = 3"),
+    @NamedQuery(name = "Kanri.chkSheetDlvryKanries", query = "UPDATE Kanri k "
+            + "SET k.status = -1 "
+            + "WHERE k.id IN :ids"),
     /*
     @NamedQuery(name = "Kanri.findByStatus", query = "SELECT k FROM Kanri k WHERE k.status = :status"),
     @NamedQuery(name = "Kanri.findByStatusApp", query = "SELECT k FROM Kanri k WHERE k.statusApp = :statusApp"),
