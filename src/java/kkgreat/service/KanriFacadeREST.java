@@ -840,6 +840,26 @@ public class KanriFacadeREST extends AbstractFacade<Kanri> {
         }
         */
         
+        /*受渡方法「郵送」書類データ検索
+        * status:-1「郵送」に更新処理の為、該当データの検索
+        * 帳票作成完了後に一括更新処理(return行直前)
+        */
+        List<Long> idsList = new ArrayList<Long>();                                 // 更新書類のIDをリスト化 JPQLのWhere句で使用
+        for(List<Kanri> kList: printKanriList) {
+            if (Objects.nonNull(kList)) {
+                for (Kanri kk : kList ) {
+                    if (Objects.equals(kk.getDlvry(), Const.DLVRY_MAIL)) {
+                        idsList.add(kk.getId());
+                        /* console debug */
+                        //System.out.println(kk.getId() + kk.getHokengaisha() + kk.getHokenTantou() + kk.getDlvry());
+                        /* end debug */
+                    }
+                }
+            } else {
+                System.out.println("is null");
+            }
+        }
+        
         /*帳票作成 概要
         *  ページ結合により複数ある単体帳票を1ファイルにまとめる
         *  1ページ目の帳票を作成後、以後帳票は作成後ページに変換、2ページ以降として順次結合する
@@ -891,6 +911,17 @@ public class KanriFacadeREST extends AbstractFacade<Kanri> {
         Response.ResponseBuilder response = Response.ok((Object) file);
         response.header("Content-Disposition",
                 "attachment; filename=checkSheet.pdf");
+        /*
+        *  郵送書類のstatus--->-1に一括更新
+        */
+        if (idsList.size() > 0) {
+            TypedQuery<Kanri> q;
+            q = getEntityManager().createNamedQuery("Kanri.chkSheetDlvryKanries", Kanri.class);
+            // 検索した郵送書類のidリストをセット
+            q.setParameter("ids", idsList);
+            q.executeUpdate();
+        }
+        
         return response.build();
     }
     
