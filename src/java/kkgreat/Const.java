@@ -30,6 +30,10 @@ public class Const {
     public static final Integer STATUS_NOT_APPROVE = 0;
     public static final Integer STATUS_APPROVE = 10;
     
+    // 受渡方法
+    public static final String DLVRY_HANDING = "受渡";
+    public static final String DLVRY_MAIL = "郵送";
+    
     // 印刷JasperReportsファイルパス
     //public static final String JASPER_PATH_JLX_CHECKSHEET = "/Users/great_kaneko/NetBeansProjects/Ukewatashi/web/japsper/JLX_report.jasper";
     //public static final String PDF_OUTPUT_PATH_JLX_CHECKSHEET = "/Users/great_kaneko/NetBeansProjects/pdf/ukewatashi_testA4.pdf";
