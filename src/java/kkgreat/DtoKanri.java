@@ -31,7 +31,9 @@ public class DtoKanri {
     private String seiho;
     private String shoukenbango;
     private String keiyakusha;
+    private String okShoruiIchiran;
     private String fubiShoruiIchiran;
+    private String kakuninbi;
     private String bikou;
     
 
@@ -369,6 +371,34 @@ public class DtoKanri {
      */
     public void setSeiho(String seiho) {
         this.seiho = seiho;
+    }
+
+    /**
+     * @return the okShoruiIchiran
+     */
+    public String getOkShoruiIchiran() {
+        return okShoruiIchiran;
+    }
+
+    /**
+     * @param okShoruiIchiran the okShoruiIchiran to set
+     */
+    public void setOkShoruiIchiran(String okShoruiIchiran) {
+        this.okShoruiIchiran = okShoruiIchiran;
+    }
+
+    /**
+     * @return the kakuninbi
+     */
+    public String getKakuninbi() {
+        return kakuninbi;
+    }
+
+    /**
+     * @param kakuninbi the kakuninbi to set
+     */
+    public void setKakuninbi(String kakuninbi) {
+        this.kakuninbi = kakuninbi;
     }
     
     

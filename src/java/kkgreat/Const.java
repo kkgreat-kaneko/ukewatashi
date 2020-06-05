@@ -13,7 +13,10 @@ public class Const {
 
     public static final String JLX_HOKEN = "株式会社JALUX保険部";
     public static final String JLX_HS_HOKEN = "株式会社JALUX保険サービス";
-    
+    // 確認書印刷用会社名
+    public static final String PRT_JLX_HOKEN = "JALUX保険部";
+    public static final String PRT_JLX_HS_HOKEN = "JALUX保険サービス";
+        
     // Status ButtonValue
     public static final String STATUS_ALL   = "1";
     public static final String STATUS_DLVRY = "2";
@@ -37,9 +40,13 @@ public class Const {
     // 印刷JasperReportsファイルパス
     //public static final String JASPER_PATH_JLX_CHECKSHEET = "/Users/great_kaneko/NetBeansProjects/Ukewatashi/web/japsper/JLX_report.jasper";
     //public static final String PDF_OUTPUT_PATH_JLX_CHECKSHEET = "/Users/great_kaneko/NetBeansProjects/pdf/ukewatashi_testA4.pdf";
-    //　開発検証機用
+    // 開発検証機用共通パス設定/opt以下パスにファイル配置
+    // チェックシート印刷用jasperファイル
     public static final String JASPER_PATH_JLX_CHECKSHEET = "/opt/ukewatashi/jasper/JLX_report.jasper";
     public static final String PDF_OUTPUT_PATH_JLX_CHECKSHEET = "/opt/ukewatashi/pdf/JLX_CHECKSHEET.pdf";
+    // 確認書印刷用jasperファイル
+    public static final String JASPER_PATH_JLX_HOKEN_CONFIRM = "/opt/ukewatashi/jasper/hoken_report.jasper";
+    public static final String PDF_OUTPUT_PATH_JLX_HOKEN_CONFIRM = "/opt/ukewatashi/pdf/hoken_CHECKSHEET.pdf";
     
     
 }

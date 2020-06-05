@@ -77,7 +77,6 @@ public class KanriFacadeREST extends AbstractFacade<Kanri> {
         TypedQuery<Long> q2 = getEntityManager().createNamedQuery("Kanri.findDlvryChk", Long.class);
         q2.setParameter("loginId", entity.getUserId());
         Long cnt2 = (Long)q2.getSingleResult();
-        System.out.println(cnt2);
         
         RequestDto dto = new RequestDto();
         Long[] paramLongs = { cnt1, cnt2 };
@@ -217,7 +216,7 @@ public class KanriFacadeREST extends AbstractFacade<Kanri> {
         
         sb.append(" ORDER BY k.id DESC");
         query = sb.toString();
-        System.out.println(query);
+        /*debug*/ //System.out.println(query);
         TypedQuery<Kanri> q = getEntityManager().createQuery(query, Kanri.class);
         q.setFirstResult(0);
         q.setMaxResults(entity.getLimit());
@@ -923,6 +922,233 @@ public class KanriFacadeREST extends AbstractFacade<Kanri> {
         }
         
         return response.build();
+    }
+    
+    //--------------------------------------------------------------------------------------------------------
+    /*出力debugテスト用
+    *  JasperReport帳票　確認書印刷PDF
+    *　DtoKanriへデータをセット、指定パスの帳票からJasperExportManagerが指定パスにPDFを作成する
+    *  java.io.Fileでファイルを読み込み、jax-rs Responseにて添付ファイル形式でPDFデータを送信する
+    *  Httpタイプ　application/pdf
+    */    
+    //@TokenSecurity
+    @GET
+    @Path("hokentestpdf")
+    @Produces("application/pdf")
+    public Response getHokenPdfTest() {
+        //jasperファイルと出力先のフォルダを指定。
+        String jasperPath = Const.JASPER_PATH_JLX_HOKEN_CONFIRM;
+        String outputFilePath = Const.PDF_OUTPUT_PATH_JLX_HOKEN_CONFIRM;
+        
+        /*
+        * パラメータ　ページヘッダー部固定値セット
+        * 保険会社名、担当者会社名
+        */
+        Map<String,Object> params = setJsperParamsHokenTest();
+        //フィールドデータセット(ヘッダー以下フィールド繰り返しセット処理)
+        List<DtoKanri> flist = setJasperFieldsHokenTest();
+        //帳票フィールドデータソース作成
+        JRBeanCollectionDataSource ds = new JRBeanCollectionDataSource(flist);
+
+        try{           
+            //抽象レポートを生成する。
+            JasperPrint pdf = JasperFillManager.fillReport(jasperPath, params, ds);
+            
+            //PDFファイルに出力する。
+            JasperExportManager.exportReportToPdfFile(pdf, outputFilePath);
+
+        }catch(Exception e){
+            throw new RuntimeException(e);
+        }
+        
+    
+        File file = new File(outputFilePath);
+
+        Response.ResponseBuilder response = Response.ok((Object) file);
+        response.header("Content-Disposition",
+                "attachment; filename=ukewatashi_testA4.pdf");
+        return response.build();
+        
+    }
+    
+    /*debugテスト用
+    *   確認書印刷用パラメータセットメソッド
+    *   
+    */
+    private Map<String,Object> setJsperParamsHokenTest() {
+        Map<String,Object> params = new HashMap<String,Object>();
+        params.put("tantoushaKaisha", Const.PRT_JLX_HS_HOKEN);
+        params.put("hokengaisha", "Aflac");
+        
+        return params;
+    }
+    
+    /*debugテスト用
+    *   確認書印刷用フィールド値セットメソッド
+    *   
+    */
+    private List<DtoKanri> setJasperFieldsHokenTest() {
+        
+        List<DtoKanri> list = new ArrayList<DtoKanri>();
+        DtoKanri fDto = new DtoKanri();        
+        fDto.setId(257074L);                                                // Kanri.ID
+        fDto.setShoukenbango("111111");                                     // Kanri.shoukenbango
+        fDto.setKeiyakusha("テスト契約者");                                   // Kanri.keiyakusya
+        fDto.setKubun("契約書申込書");                                        // Kanri.kubun
+        fDto.setOkShoruiIchiran("[電話募集確認書]");                           // Kanri.okShoruiIchiran
+        fDto.setTantousha("管理者ユーザー");                                   // Kanri.tantousha
+        fDto.setShinseisha("管理者ユーザー");                                  // Kanri.shinseisha
+        fDto.setHokenTantou("有賀　豪");                                      // Kanri.hokenTantou
+        fDto.setKakuninbi("2020/05/25 13:55:42");                           // Kanri.kakuninbi
+        fDto.setShoruiMaisu(1L);                                            // Kanri.shoruiMaisu
+        fDto.setBikou("備考欄テストテスト");                                   // Kanri.bikou
+        list.add(fDto);
+        
+        return list;
+    }
+    //--------------------------------------------------------------------------------------------------------
+    
+    /*
+    *   確認書印刷前、印刷データ有無チェック。件数を返す。
+    */
+    @TokenSecurity
+    @POST
+    @Path("chkhokenconfirm")
+    @Consumes({"application/json"})
+    @Produces("text/plain")
+    public Integer chkHokenConfirm(Kanri kanri) {
+        
+        // 名前付きクエリ作成
+        TypedQuery<Kanri> q;
+        q = getEntityManager().createNamedQuery("Kanri.findHokenConfirmList", Kanri.class);
+        q.setParameter("tantoushaKaisha", kanri.getTantoushaKaisha());
+        q.setParameter("hokengaisha", kanri.getHokengaisha());
+        List<Kanri> kanriList = q.getResultList();
+        
+        return kanriList.size();
+    }
+    
+    /*
+    *  JasperReport帳票　確認書印刷PDF出力
+    *  DtoKanriへデータをセット、指定パスの帳票からJasperExportManagerが指定パスにPDFを作成する
+    *  java.io.Fileでファイルを読み込み、jax-rs Responseにて添付ファイル形式でPDFデータを送信する
+    *  Httpタイプ　application/pdf
+    */
+    @TokenSecurity
+    @POST
+    @Path("printhokenconfirm")
+    @Consumes({"application/json"})
+    @Produces("application/pdf")
+    public Response printHokenConfirm(Kanri kanri) {
+        //jasperファイルと出力先のフォルダを指定。
+        String jasperPath = Const.JASPER_PATH_JLX_HOKEN_CONFIRM;
+        String outputFilePath = Const.PDF_OUTPUT_PATH_JLX_HOKEN_CONFIRM;
+        
+        // 名前付きクエリ作成
+        TypedQuery<Kanri> q;
+        q = getEntityManager().createNamedQuery("Kanri.findHokenConfirmList", Kanri.class);
+        q.setParameter("tantoushaKaisha", kanri.getTantoushaKaisha());
+        q.setParameter("hokengaisha", kanri.getHokengaisha());
+        List<Kanri> kanriList = q.getResultList();
+        
+        /*
+        * パラメータ　ページヘッダー部固定値セット
+        * 保険会社名、担当者会社名
+        */
+        Map<String,Object> params = setJsperParamsHoken(kanri);
+        //フィールドデータセット(ヘッダー以下フィールド繰り返しセット処理)
+        List<DtoKanri> flist = setJasperFieldsHoken(kanriList);
+        //帳票フィールドデータソース作成
+        JRBeanCollectionDataSource ds = new JRBeanCollectionDataSource(flist);
+
+        try{
+            
+            //抽象レポートを生成する。
+            JasperPrint pdf = JasperFillManager.fillReport(jasperPath, params, ds);
+            
+            //PDFファイルに出力する。
+            JasperExportManager.exportReportToPdfFile(pdf, outputFilePath);
+
+        }catch(Exception e){
+            throw new RuntimeException(e);
+        }
+        
+        //アウトプットファイルを読み込み、レスポンスデータとして返す
+        Response responsePdf;
+        try{
+        File file = new File(outputFilePath);
+
+        Response.ResponseBuilder response = Response.ok((Object) file);
+        response.header("Content-Disposition",
+                "attachment; filename=ukewatashi_hoken_confirm.pdf");
+        responsePdf = response.build();
+        
+        }catch(Exception e){
+            throw new RuntimeException(e);
+        }
+        
+        /*
+        *  レスポンスデータを返す前に出力したリストのstatus:1--->2に一括更新
+        */
+        List<Long> ids = new ArrayList<Long>();
+        kanriList.forEach(k->{
+            ids.add(k.getId());
+        });
+        if (ids.size() > 0) {
+            TypedQuery<Kanri> q2;
+            q2 = getEntityManager().createNamedQuery("Kanri.changeStatusHokenConfirm", Kanri.class);
+            // 検索した郵送書類のidリストをセット
+            q2.setParameter("ids", ids);
+            q2.executeUpdate();
+        }
+        
+        return responsePdf;
+    }
+    
+    /*
+    *   確認書印刷用パラメータセットメソッド
+    *   入力担当会社名、保険会社名を帳票ヘッダー部パラメータ値にセット
+    */
+    private Map<String,Object> setJsperParamsHoken(Kanri kanri) {
+        Map<String,Object> params = new HashMap<String,Object>();
+        // 入力担当者会社名セット
+        String tantoushaKaisha = kanri.getTantoushaKaisha();
+        if (Objects.equals(tantoushaKaisha, Const.JLX_HOKEN)) {
+            params.put("tantoushaKaisha", Const.PRT_JLX_HOKEN);
+        } else {
+            params.put("tantoushaKaisha", Const.PRT_JLX_HS_HOKEN);
+        }
+        // 保険会社名セット
+        params.put("hokengaisha", kanri.getHokengaisha());
+        
+        return params;
+    }
+    
+    /*
+    *   確認書印刷用フィールド値セットメソッド
+    *   帳票リスト部の値をセット
+    */
+    private List<DtoKanri> setJasperFieldsHoken(List<Kanri> kanriList) {
+        
+        List<DtoKanri> list = new ArrayList<DtoKanri>();
+        //フィールドデータセット(繰り返し処理)
+        kanriList.forEach(kanri->{
+            DtoKanri fDto = new DtoKanri();        
+            fDto.setId(kanri.getId());                                          // Kanri.ID
+            fDto.setShoukenbango(kanri.getShoukenbango());                      // Kanri.shoukenbango
+            fDto.setKeiyakusha(kanri.getKeiyakusha());                          // Kanri.keiyakusya
+            fDto.setKubun(kanri.getKubun());                                    // Kanri.kubun
+            fDto.setOkShoruiIchiran(kanri.getOkShoruiIchiran());                // Kanri.okShoruiIchiran
+            fDto.setTantousha(kanri.getTantousha());                            // Kanri.tantousha
+            fDto.setShinseisha(kanri.getShinseisha());                          // Kanri.shinseisha
+            fDto.setHokenTantou(kanri.getHokenTantou());                        // Kanri.hokenTantou
+            fDto.setKakuninbi(kanri.getSaishuKakuninbi());                      // Kanri.saishuKakuninbi
+            fDto.setShoruiMaisu(kanri.getShoruiMaisu());                        // Kanri.shoruiMaisu
+            fDto.setBikou(kanri.getBikou());                                    // Kanri.bikou
+            list.add(fDto);
+        });
+        
+        return list;
     }
     
     //----------------------------Integer----------------------------------------------------------------
