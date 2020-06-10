@@ -25,7 +25,10 @@ import javax.xml.bind.annotation.XmlRootElement;
 @Table(name = "tantousha")
 @XmlRootElement
 @NamedQueries({
-    @NamedQuery(name = "Tantousha.findByKaisha", query = "SELECT t FROM Tantousha t WHERE t.kaisha = :kaisha")
+    @NamedQuery(name = "Tantousha.findByKaisha", query = "SELECT t FROM Tantousha t WHERE t.kaisha = :kaisha"),
+    @NamedQuery(name = "Tantousha.findLikeUserId", query = "SELECT t FROM Tantousha t WHERE t.userId like :userId"),
+    @NamedQuery(name = "Tantousha.findLikeShimei", query = "SELECT t FROM Tantousha t WHERE t.shimei like :shimei"),
+    @NamedQuery(name = "Tantousha.findLikeUserIDAndShimei", query = "SELECT t FROM Tantousha t WHERE t.userId like :userId AND t.shimei like :shimei"),
     /*
     @NamedQuery(name = "Tantousha.findAll", query = "SELECT t FROM Tantousha t"),
     @NamedQuery(name = "Tantousha.findByUserId", query = "SELECT t FROM Tantousha t WHERE t.userId = :userId"),
