@@ -27,8 +27,11 @@ import javax.xml.bind.annotation.XmlRootElement;
 @NamedQueries({
     @NamedQuery(name = "Hokengaisha.getTantouList", query = "SELECT h FROM Hokengaisha h WHERE h.hokengaisha = :hokengaisha"),
     @NamedQuery(name = "Hokengaisha.getSeihoList", query = "SELECT distinct h.seiho FROM Hokengaisha h WHERE h.hokengaisha = :hokengaisha"),
-    /*未使用
     @NamedQuery(name = "Hokengaisha.findAll", query = "SELECT h FROM Hokengaisha h"),
+    @NamedQuery(name = "Hokengaisha.findLikeUserId", query = "SELECT h FROM Hokengaisha h WHERE h.userId like :userId"),
+    @NamedQuery(name = "Hokengaisha.findLikeKakuninsha", query = "SELECT h FROM Hokengaisha h WHERE h.kakuninsha like :kakuninsha"),
+    @NamedQuery(name = "Hokengaisha.findLikeUserIDAndKakuninsha", query = "SELECT h FROM Hokengaisha h WHERE h.userId like :userId AND h.kakuninsha like :kakuninsha"),
+    /*未使用
     @NamedQuery(name = "Hokengaisha.findByUserId", query = "SELECT h FROM Hokengaisha h WHERE h.userId = :userId"),
     @NamedQuery(name = "Hokengaisha.findByPassword", query = "SELECT h FROM Hokengaisha h WHERE h.password = :password"),
     @NamedQuery(name = "Hokengaisha.findByPasswordSetdate", query = "SELECT h FROM Hokengaisha h WHERE h.passwordSetdate = :passwordSetdate"),
