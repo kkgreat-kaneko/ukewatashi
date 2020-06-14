@@ -25,11 +25,9 @@ import javax.xml.bind.annotation.XmlRootElement;
 @Table(name = "kubun")
 @XmlRootElement
 @NamedQueries({
-    /*未使用
     @NamedQuery(name = "Kubun.findAll", query = "SELECT k FROM Kubun k"),
     @NamedQuery(name = "Kubun.findById", query = "SELECT k FROM Kubun k WHERE k.id = :id"),
     @NamedQuery(name = "Kubun.findByKubun", query = "SELECT k FROM Kubun k WHERE k.kubun = :kubun")
-    */
 })
 public class Kubun implements Serializable {
     private static final long serialVersionUID = 1L;
