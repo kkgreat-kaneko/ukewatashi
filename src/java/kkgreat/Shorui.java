@@ -1,7 +1,7 @@
 /*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
+ * 書類リスト
+ * 
+ * 
  */
 package kkgreat;
 
@@ -18,19 +18,14 @@ import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import javax.xml.bind.annotation.XmlRootElement;
 
-/**
- *
- * @author great_kaneko
- */
+
 @Entity
 @Table(name = "shorui")
 @XmlRootElement
 @NamedQueries({
-    /* 未使用
     @NamedQuery(name = "Shorui.findAll", query = "SELECT s FROM Shorui s"),
     @NamedQuery(name = "Shorui.findById", query = "SELECT s FROM Shorui s WHERE s.id = :id"),
     @NamedQuery(name = "Shorui.findByShorui", query = "SELECT s FROM Shorui s WHERE s.shorui = :shorui")
-    */
 })
 public class Shorui implements Serializable {
     private static final long serialVersionUID = 1L;
