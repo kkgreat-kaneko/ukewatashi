@@ -7,6 +7,7 @@ package kkgreat;
 public class Token {
     private String token;
     private Tantousha tantousha;
+    private Hokengaisha hokengaisha;
     /*
     private String userId;
     private long kengen;
@@ -38,6 +39,20 @@ public class Token {
      */
     public void setTantousha(Tantousha tantousha) {
         this.tantousha = tantousha;
+    }
+
+    /**
+     * @return the hokengaisha
+     */
+    public Hokengaisha getHokengaisha() {
+        return hokengaisha;
+    }
+
+    /**
+     * @param hokengaisha the hokengaisha to set
+     */
+    public void setHokengaisha(Hokengaisha hokengaisha) {
+        this.hokengaisha = hokengaisha;
     }
 
 }

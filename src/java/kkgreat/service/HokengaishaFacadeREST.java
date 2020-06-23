@@ -7,6 +7,8 @@ package kkgreat.service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
+import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
@@ -21,6 +23,7 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import kkgreat.Hokengaisha;
 import kkgreat.SeihoList;
+import kkgreat.Token;
 
 /**
  *
@@ -31,10 +34,41 @@ import kkgreat.SeihoList;
 public class HokengaishaFacadeREST extends AbstractFacade<Hokengaisha> {
     @PersistenceContext(unitName = "UkewatashiPU")
     private EntityManager em;
+    
+    @EJB
+    JwtAuthorization jwtauth;
 
     public HokengaishaFacadeREST() {
         super(Hokengaisha.class);
     }
+    
+    /*
+    * ログイン処理時使用
+    * アクセスセキュリティ制限無し
+    * ログイン成功時、アクセス許可トークンを発行、以後トークンチェックよりアクセスを許可 
+    */
+    @POST
+    @Consumes({"application/json"})
+    @Path("auth")
+    public Token auth(Hokengaisha authHokengaisha) {
+        if (Objects.nonNull(authHokengaisha.getUserId()) ) {
+            Hokengaisha hokengaisha = super.find(authHokengaisha.getUserId());
+            if (Objects.nonNull(hokengaisha)) {
+                if ( hokengaisha.getPassword().equals(authHokengaisha.getPassword()) ) {
+                    Token token = new Token();
+                    token.setToken(jwtauth.issuToken());
+                    //System.out.println("test token");
+                    //token.setUserId(tantousha.getUserId());
+                    //token.setKengen(tantousha.getKengen());
+                    token.setHokengaisha(hokengaisha);
+                    return token;
+                }
+            }
+        }
+        System.out.println("login fail");
+        return null;
+    }
+    
 
     @TokenSecurity
     @POST
