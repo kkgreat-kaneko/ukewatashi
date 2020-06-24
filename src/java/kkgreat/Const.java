@@ -23,7 +23,6 @@ public class Const {
     public static final String STATUS_OK    = "3";
     public static final String STATUS_NOT   = "4";
     public static final String STATUS_NG    = "5";
-    public static final String STATUS_END   = "6";
     
     // 承認Status絞込み選択状態
     public static final String STATUS_APP_NOT = "1";
