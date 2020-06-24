@@ -1,7 +1,5 @@
 /*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
+ * 書類管理テーブルサービス
  */
 package kkgreat.service;
 
@@ -1151,7 +1149,72 @@ public class KanriFacadeREST extends AbstractFacade<Kanri> {
         return list;
     }
     
-    //----------------------------Integer----------------------------------------------------------------
+    /*
+    * データテーブルリスト用検索処理
+    * Status絞込み、JLX、JLXHS、承認Status絞込み項目選択処理
+    * 動的JPQLを作成して実行
+    */
+    @TokenSecurity
+    @POST
+    @Path("getlistbyhokengaisha")
+    @Consumes({"application/json"})
+    public List<Kanri> getListByHokengaisha(Kanri entity) {
+        String query = "";
+        StringBuffer sb = new StringBuffer("select k from Kanri k");
+        /*
+        *  保険会社ログインURLよりJLX/JLXHS会社決定された値をセット
+        */
+        String kaishas[] = entity.getsKaisha();
+        if (kaishas.length > 0) {
+            sb.append(" where k.shinseishaKaisha = ");
+            sb.append( Utility.sqlStringFormat(kaishas[0]) );
+        }else {
+            System.out.println("KanriREST getListbyHokengaisha: param kaisha not fournd");
+            return null;
+        }
+        /*
+        *  保険会社指定
+        */
+        sb.append(" AND k.hokengaisha = ");
+        sb.append( Utility.sqlStringFormat(entity.getHokengaisha()) );
+        /*
+        *  承認済ステータス指定
+        */
+        sb.append(" AND k.statusApp = 10");
+        /*
+        *  書類Status絞込み 保険会社メインフォーム選択値からセット　全件の選択なし
+        *  保険会社メインは、郵送(-1)、印刷済(2)、確認済(1)、未確認(0,3)の絞込み選択がある
+        */
+        switch (Long.toString( entity.getStatus() )) {
+            case Const.STATUS_DLVRY: //STATUS_DLVRY:2 郵送
+                sb.append(" AND k.status = -1");
+                break;
+            case Const.STATUS_OK: //STATUS_OK:3 確認済分
+                sb.append(" AND k.status = 1");
+                break;
+            case Const.STATUS_NOT: //STATUS_NOT:4 未確認分
+                sb.append(" AND (k.status = 0 OR k.status = 3)");
+                break;
+            case Const.STATUS_END:  //STATUS_END:6 印刷済分
+                sb.append(" AND k.status = 2");
+                break;
+        }
+        // 管理No以前検索 管理NO絞込み指定時検索しない
+        if (Objects.nonNull( entity.getBeforeId() )) {
+            sb.append(" AND k.id <= ");
+            sb.append(entity.getBeforeId());
+        }
+        
+        sb.append(" ORDER BY k.id DESC");
+        query = sb.toString();
+        /*debug*/ System.out.println(query);
+        TypedQuery<Kanri> q = getEntityManager().createQuery(query, Kanri.class);
+        q.setFirstResult(0);
+        q.setMaxResults(entity.getLimit());
+        return q.getResultList();
+    }
+    
+    //--------------------------------------------------------------------------------------------
     //  以下未使用メソッド
     //--------------------------------------------------------------------------------------------
     /*
