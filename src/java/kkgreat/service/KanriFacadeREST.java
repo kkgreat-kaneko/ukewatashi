@@ -1019,7 +1019,7 @@ public class KanriFacadeREST extends AbstractFacade<Kanri> {
         // 名前付きクエリ作成
         TypedQuery<Kanri> q;
         q = getEntityManager().createNamedQuery("Kanri.findHokenConfirmList", Kanri.class);
-        q.setParameter("tantoushaKaisha", kanri.getTantoushaKaisha());
+        q.setParameter("shinseishaKaisha", kanri.getShinseishaKaisha());
         q.setParameter("hokengaisha", kanri.getHokengaisha());
         List<Kanri> kanriList = q.getResultList();
         
@@ -1045,7 +1045,7 @@ public class KanriFacadeREST extends AbstractFacade<Kanri> {
         // 名前付きクエリ作成
         TypedQuery<Kanri> q;
         q = getEntityManager().createNamedQuery("Kanri.findHokenConfirmList", Kanri.class);
-        q.setParameter("tantoushaKaisha", kanri.getTantoushaKaisha());
+        q.setParameter("shinseishaKaisha", kanri.getShinseishaKaisha());
         q.setParameter("hokengaisha", kanri.getHokengaisha());
         List<Kanri> kanriList = q.getResultList();
         

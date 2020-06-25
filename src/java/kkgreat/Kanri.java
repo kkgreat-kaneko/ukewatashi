@@ -54,7 +54,7 @@ import javax.xml.bind.annotation.XmlRootElement;
             + "SET k.status = -1 "
             + "WHERE k.id IN :ids"),
     @NamedQuery(name = "Kanri.findHokenConfirmList", query = "select k from Kanri k " 
-            + "where k.tantoushaKaisha = :tantoushaKaisha and k.hokengaisha = :hokengaisha "
+            + "where k.shinseishaKaisha = :shinseishaKaisha and k.hokengaisha = :hokengaisha "
             + "and k.status = 1 and k.statusApp = 10 order by k.id DESC"),
     @NamedQuery(name = "Kanri.changeStatusHokenConfirm", query = "UPDATE Kanri k "
             + "SET k.status = 2 "
