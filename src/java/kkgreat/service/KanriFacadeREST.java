@@ -1207,11 +1207,44 @@ public class KanriFacadeREST extends AbstractFacade<Kanri> {
         
         sb.append(" ORDER BY k.id DESC");
         query = sb.toString();
-        /*debug*/ System.out.println(query);
         TypedQuery<Kanri> q = getEntityManager().createQuery(query, Kanri.class);
         q.setFirstResult(0);
         q.setMaxResults(entity.getLimit());
         return q.getResultList();
+    }
+    
+    /*
+    *  保険会社画面初期化チェック処理
+    *  3パターンをチェック 1.status0,3(未確認分)データ数、2.status3(不備書類)データ数、3.status1(確認済分)データ数
+    *  配列データをJSON型でレスポンス送信する場合、Seriarise(JAXB)されたクラスが必要の為RequestDtoクラスを使用
+    */
+    @TokenSecurity
+    @POST
+    @Path("getcheckbyhokengaisha")
+    @Consumes({"application/json"})
+    @Produces({"application/json"})
+    public List<RequestDto> getCheckByHokengaisha(Kanri entity) {      
+        /*
+        *  保険会社ログインURLよりJLX/JLXHS会社決定された値をセット
+        */
+        String kaishas[] = entity.getsKaisha();
+        TypedQuery<Long> q = getEntityManager().createNamedQuery("Kanri.countStatusNot", Long.class);
+        q.setParameter("shinseishaKaisha", kaishas[0]);
+        q.setParameter("hokengaisha", entity.getHokengaisha());
+        Long countNot = (Long)q.getSingleResult();
+        TypedQuery<Long> q2 = getEntityManager().createNamedQuery("Kanri.countStatusNg", Long.class);
+        q2.setParameter("shinseishaKaisha", kaishas[0]);
+        q2.setParameter("hokengaisha", entity.getHokengaisha());
+        Long countNg = (Long)q2.getSingleResult();
+        TypedQuery<Long> q3 = getEntityManager().createNamedQuery("Kanri.countStatusOk", Long.class);
+        q3.setParameter("shinseishaKaisha", kaishas[0]);
+        q3.setParameter("hokengaisha", entity.getHokengaisha());
+        Long countOk = (Long)q3.getSingleResult();
+        Long[] countArr = {countNot, countNg, countOk};                                  // 未確認分、不備書類、確認分の順番で配列化
+        RequestDto requestDto = new RequestDto();
+        requestDto.setParamLongs(countArr);
+        List<RequestDto> chkList = new ArrayList<RequestDto>(Arrays.asList(requestDto)); //配列List化
+        return chkList;
     }
     
     //--------------------------------------------------------------------------------------------
@@ -1243,7 +1276,7 @@ public class KanriFacadeREST extends AbstractFacade<Kanri> {
     }
     */
     
-    
+    /*
     //@TokenSecurity
     @GET
     @Override
@@ -1251,7 +1284,7 @@ public class KanriFacadeREST extends AbstractFacade<Kanri> {
     public List<Kanri> findAll() {
         return super.findAll();
     }
-    
+    */
     
     /*
     @TokenSecurity

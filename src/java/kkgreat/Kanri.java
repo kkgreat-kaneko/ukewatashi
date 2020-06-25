@@ -59,6 +59,15 @@ import javax.xml.bind.annotation.XmlRootElement;
     @NamedQuery(name = "Kanri.changeStatusHokenConfirm", query = "UPDATE Kanri k "
             + "SET k.status = 2 "
             + "WHERE k.id IN :ids"),
+    @NamedQuery(name = "Kanri.countStatusNot", query = "SELECT COUNT(k) from Kanri k "
+            + "WHERE k.shinseishaKaisha = :shinseishaKaisha AND k.hokengaisha = :hokengaisha AND k.statusApp = 10 "
+            + "AND (k.status = 0 OR k.status = 3)"),
+    @NamedQuery(name = "Kanri.countStatusNg", query = "SELECT COUNT(k) from Kanri k "
+            + "WHERE k.shinseishaKaisha = :shinseishaKaisha AND k.hokengaisha = :hokengaisha AND k.statusApp = 10 "
+            + "AND k.status = 3"),
+    @NamedQuery(name = "Kanri.countStatusOk", query = "SELECT COUNT(k) from Kanri k "
+            + "WHERE k.shinseishaKaisha = :shinseishaKaisha AND k.hokengaisha = :hokengaisha AND k.statusApp = 10 "
+            + "AND k.status = 1"),
     /*
     @NamedQuery(name = "Kanri.findByStatus", query = "SELECT k FROM Kanri k WHERE k.status = :status"),
     @NamedQuery(name = "Kanri.findByStatusApp", query = "SELECT k FROM Kanri k WHERE k.statusApp = :statusApp"),
