@@ -206,6 +206,33 @@ public class TantoushaFacadeREST extends AbstractFacade<Tantousha> {
         return q.getResultList();
     }
     
+    /*
+    * 保険会社　確認書印刷認証処理
+    * 印刷用ユーザー(JLX/JLXHS2ユーザー)のパスワードを入力する印刷前の認証処理
+    */
+    @TokenSecurity
+    @POST
+    @Consumes({"application/json"})
+    @Produces("text/plain")
+    @Path("prtauth")
+    public Integer printAuth(Tantousha authTantousha) {
+        if (Objects.nonNull(authTantousha.getUserId()) ) {
+            Tantousha tantousha = super.find(authTantousha.getUserId());
+            if (Objects.nonNull(tantousha)) {
+                if ( tantousha.getPassword().equals(authTantousha.getPassword()) ) {
+                    return 1;
+                }
+            }
+        }
+        System.out.println("login fail");
+        return 0;
+    }
+    
+    
+    @Override
+    protected EntityManager getEntityManager() {
+        return em;
+    }
     
     //テスト確認用フリーアクセス可能 削除予定
     /*
@@ -262,10 +289,5 @@ public class TantoushaFacadeREST extends AbstractFacade<Tantousha> {
         return String.valueOf(super.count());
     }
     */
-    
-    @Override
-    protected EntityManager getEntityManager() {
-        return em;
-    }
     
 }

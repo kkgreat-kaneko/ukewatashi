@@ -452,66 +452,10 @@ public class KanriFacadeREST extends AbstractFacade<Kanri> {
         return 0;
     }
     
-    
     /*
-    *  JasperReport帳票　PDF出力テスト用
-    *　DtoKanriへデータをセット、指定パスの帳票からJasperExportManagerが指定パスにPDFを作成する
-    *  java.io.Fileでファイルを読み込み、jax-rs Responseにて添付ファイル形式でPDFデータを送信する
-    *  Httpタイプ　application/pdf
+    *  チェックシートPDF印刷出力　ヘッダー固定値のパラメータセット処理
+    *
     */
-    @TokenSecurity
-    @GET
-    @Path("testpdf")
-    @Produces("application/pdf")
-    public Response getPdfTest() {
-        //jasperファイルと出力先のフォルダを指定。
-        String jasperPath = "/Users/great_kaneko/NetBeansProjects/Ukewatashi/web/japsper/JLX_report.jasper";
-        //String outputFilePath = "/Users/great_kaneko/NetBeansProjects/Ukewatashi/web/pdf/ukewatashi_testA4.pdf";
-        String outputFilePath = "/Users/great_kaneko/NetBeansProjects/pdf/ukewatashi_testA4.pdf";
-        
-        //Long firstId = 257101L;
-        //Kanri fKanri = super.find(firstId);
-        Long[] ids = {257090L, 257086L };
-        List<Long> idsList = new ArrayList<Long>(Arrays.asList(ids));
-        // 名前付きクエリSELECT IN検索
-        TypedQuery<Kanri> q;
-        q = getEntityManager().createNamedQuery("Kanri.findByIds", Kanri.class);
-        q.setParameter("ids", idsList);
-        List<Kanri> kanriList = q.getResultList();
-        Iterator<Kanri> kanriIterator = kanriList.iterator();
-        Kanri fKanri = kanriIterator.next();
-        /*
-        * パラメータ　ページヘッダー部固定値セット
-        * 担当者会社名、入力担当者、受渡方法、保険会社名、保険担当者名
-        */
-        Map<String,Object> params = setJsperParams(fKanri);
-        //フィールドデータセット(ヘッダー以下フィールド繰り返しセット処理)
-        List<DtoKanri> flist = setJasperFields(kanriList);
-        //帳票フィールドデータソース作成
-        JRBeanCollectionDataSource ds = new JRBeanCollectionDataSource(flist);
-
-        try{
-            
-            //抽象レポートを生成する。
-            JasperPrint pdf = JasperFillManager.fillReport(jasperPath, params, ds);
-            
-            //PDFファイルに出力する。
-            JasperExportManager.exportReportToPdfFile(pdf, outputFilePath);
-
-        }catch(Exception e){
-            throw new RuntimeException(e);
-        }
-        
-    
-        File file = new File(outputFilePath);
-
-        Response.ResponseBuilder response = Response.ok((Object) file);
-        response.header("Content-Disposition",
-                "attachment; filename=ukewatashi_testA4.pdf");
-        return response.build();
-        
-    }
-    
     private Map<String,Object> setJsperParams(Kanri kanri) {
         Map<String,Object> params = new HashMap<String,Object>();
         params.put("tantoushaKaisha", kanri.getTantoushaKaisha());
@@ -523,6 +467,10 @@ public class KanriFacadeREST extends AbstractFacade<Kanri> {
         return params;
     }
     
+    /*
+    *  チェックシートPDF印刷出力　データ部フィールド繰り返しセット処理部
+    *
+    */
     private List<DtoKanri> setJasperFields(List<Kanri> kanriList) {
         
         List<DtoKanri> list = new ArrayList<DtoKanri>();
@@ -553,198 +501,6 @@ public class KanriFacadeREST extends AbstractFacade<Kanri> {
         });
         
         return list;
-    }
-    /* vesion2
-    @TokenSecurity
-    @GET
-    @Path("testpdf")
-    @Produces("application/pdf")
-    public Response getPdf() {
-        //jasperファイルと出力先のフォルダを指定。
-        String jasperPath = "/Users/great_kaneko/NetBeansProjects/Ukewatashi/web/japsper/Ukewatashi_A4test.jasper";
-        //String outputFilePath = "/Users/great_kaneko/NetBeansProjects/Ukewatashi/web/pdf/ukewatashi_testA4.pdf";
-        String outputFilePath = "/Users/great_kaneko/NetBeansProjects/pdf/ukewatashi_testA4.pdf";
-        
-        //印刷対象の受渡書類レコード指定
-        Long[] ids = {257078L, 257079L, 257081L};
-        List<Long> idsList = new ArrayList<Long>(Arrays.asList(ids)); //配列List化
-        //最初の要素(第１帳票)をListから取り出し要素削除
-        Iterator<Long> iterator = idsList.iterator();
-        Long firstId = iterator.next();
-        iterator.remove();
-        Kanri fKanri = super.find(firstId);
-        DtoKanri fDto = new DtoKanri();
-        List<DtoKanri> flist = new ArrayList<DtoKanri>();
-        fDto.setId(fKanri.getId());
-        fDto.setHokengaisha(fKanri.getHokengaisha());
-        fDto.setKeiyakusha(fKanri.getKeiyakusha());    
-        flist.add(fDto);
-        // 第1帳票を作成後、複数帳票印刷の時、ページ結合する
-        try {
-            // 1ページ目(単一帳票)帳票データソース作成
-            JRBeanCollectionDataSource fDs = new JRBeanCollectionDataSource(flist);
-            //パラメータ設定用（今回は使いません。）
-            Map<String,Object> fParams = new HashMap<String,Object>();
-            //抽象レポートを生成する。
-            JasperPrint pdf = JasperFillManager.fillReport(jasperPath, fParams, fDs);
-            
-            //単複帳票の時、ページ結合化
-            idsList.forEach(id->{
-                Kanri kanri = super.find(id);
-                DtoKanri dto = new DtoKanri();
-                List<DtoKanri> vlist = new ArrayList<DtoKanri>();
-                dto.setId(kanri.getId());
-                dto.setHokengaisha(kanri.getHokengaisha());
-                dto.setKeiyakusha(kanri.getKeiyakusha());    
-                vlist.add(dto);
-                // 帳票データソース作成
-                JRBeanCollectionDataSource ds = new JRBeanCollectionDataSource(vlist);
-                //パラメータ設定用（今回は使いません。）
-                Map<String,Object> params = new HashMap<String,Object>();
-                try {
-                //複数PDF作成　2帳票目以降としてPDFページオブジェクト
-                List<JRPrintPage> pages = null;
-                //2帳票目以降の抽象レポートを生成する。
-                JasperPrint pdf_other = JasperFillManager.fillReport(jasperPath, params, ds);
-                //2帳票目以降を最初のPDFへページ結合
-                pages = pdf_other.getPages();
-                for(JRPrintPage page : pages ){
-                   pdf.addPage(page);
-                }
-                } catch(Exception e){
-                    throw new RuntimeException(e);
-                }
-            });
-
-            //PDFファイルに出力する。
-            JasperExportManager.exportReportToPdfFile(pdf, outputFilePath);
-            
-        }catch(Exception e){
-            throw new RuntimeException(e);
-        }
-        /*
-        JRBeanCollectionDataSource ds = new JRBeanCollectionDataSource(vlist);
-        //test line　複数ページ作成　データソースインスタンス別に作成必要
-        JRBeanCollectionDataSource ds2 = new JRBeanCollectionDataSource(vlist);
-        
-        //パラメータ設定用（今回は使いません。）
-	Map<String,Object> params = new HashMap<String,Object>();
-        //jasperファイルと出力先のフォルダを指定。
-        String jasperPath = "/Users/great_kaneko/NetBeansProjects/Ukewatashi/web/japsper/Ukewatashi_A4test.jasper";
-        //String outputFilePath = "/Users/great_kaneko/NetBeansProjects/Ukewatashi/web/pdf/ukewatashi_testA4.pdf";
-        String outputFilePath = "/Users/great_kaneko/NetBeansProjects/pdf/ukewatashi_testA4.pdf";
-        
-        try{
-            //複数PDF作成　PDFページ結合
-            List<JRPrintPage> pages = null;
-            
-            //抽象レポートを生成する。
-            JasperPrint pdf = JasperFillManager.fillReport(jasperPath, params, ds);
-
-            //2つ目PDFデータ作成　作成ページを1つ目に結合
-            JasperPrint pdf2 = JasperFillManager.fillReport(jasperPath, params, ds2);
-            pages = pdf2.getPages();
-            for(JRPrintPage page : pages ){
-               pdf.addPage(page);
-            }
-            
-            //PDFファイルに出力する。
-            JasperExportManager.exportReportToPdfFile(pdf, outputFilePath);
-
-        }catch(Exception e){
-            throw new RuntimeException(e);
-        }
-        */
-    /*
-        File file = new File(outputFilePath);
-
-        Response.ResponseBuilder response = Response.ok((Object) file);
-        response.header("Content-Disposition",
-                "attachment; filename=ukewatashi_testA4.pdf");
-        return response.build();
-        
-    }
-    */
-    
-    /* version1
-    @TokenSecurity
-    @GET
-    @Path("testpdf")
-    @Produces("application/pdf")
-    public Response getPdf() {
-        
-        List<Kanri> list = super.findAll();
-        List<DtoKanri> vlist = new ArrayList<DtoKanri>();
-        list.forEach(v->{
-            DtoKanri dto = new DtoKanri();
-            dto.setId(v.getId());
-            dto.setHokengaisha(v.getHokengaisha());
-            dto.setKeiyakusha(v.getKeiyakusha());    
-            vlist.add(dto);
-        });
-        vlist.forEach(v->{
-            // System.out.println( v.getName());
-        });
-        
-        JRBeanCollectionDataSource ds = new JRBeanCollectionDataSource(vlist);
-        //test line　複数ページ作成　データソースインスタンス別に作成必要
-        JRBeanCollectionDataSource ds2 = new JRBeanCollectionDataSource(vlist);
-        
-        //パラメータ設定用（今回は使いません。）
-	Map<String,Object> params = new HashMap<String,Object>();
-        //jasperファイルと出力先のフォルダを指定。
-        String jasperPath = "/Users/great_kaneko/NetBeansProjects/Ukewatashi/web/japsper/Ukewatashi_A4test.jasper";
-        //String outputFilePath = "/Users/great_kaneko/NetBeansProjects/Ukewatashi/web/pdf/ukewatashi_testA4.pdf";
-        String outputFilePath = "/Users/great_kaneko/NetBeansProjects/pdf/ukewatashi_testA4.pdf";
-        
-        try{
-            
-            //複数PDF作成　PDFページ結合
-            List<JRPrintPage> pages = null;
-            
-            //抽象レポートを生成する。
-            JasperPrint pdf = JasperFillManager.fillReport(jasperPath, params, ds);
-
-            //2つ目PDFデータ作成　作成ページを1つ目に結合
-            JasperPrint pdf2 = JasperFillManager.fillReport(jasperPath, params, ds2);
-            pages = pdf2.getPages();
-            for(JRPrintPage page : pages ){
-               pdf.addPage(page);
-            }
-            
-            //PDFファイルに出力する。
-            JasperExportManager.exportReportToPdfFile(pdf, outputFilePath);
-
-        }catch(Exception e){
-            throw new RuntimeException(e);
-        }
-        
-        File file = new File(outputFilePath);
-
-        Response.ResponseBuilder response = Response.ok((Object) file);
-        response.header("Content-Disposition",
-                "attachment; filename=ukewatashi_testA4.pdf");
-        return response.build();
-        
-    }
-    */
-    
-    /*
-    *   テスト用メソッド　IDをIN指定GET
-    */
-    @TokenSecurity
-    @GET
-    @Path("test")
-    @Produces({"application/json"})
-    public List<Kanri> testGetKanri() {
-        Long[] ids = { 257097L, 257090L, 257086L };
-        List<Long> idsList = new ArrayList<Long>(Arrays.asList(ids));
-        // 名前付きクエリSELECT IN検索
-        TypedQuery<Kanri> q;
-        q = getEntityManager().createNamedQuery("Kanri.findByIds", Kanri.class);
-        q.setParameter("ids", idsList);
-        
-        return q.getResultList();
     }
     
     /*
@@ -922,90 +678,6 @@ public class KanriFacadeREST extends AbstractFacade<Kanri> {
         return response.build();
     }
     
-    //--------------------------------------------------------------------------------------------------------
-    /*出力debugテスト用
-    *  JasperReport帳票　確認書印刷PDF
-    *　DtoKanriへデータをセット、指定パスの帳票からJasperExportManagerが指定パスにPDFを作成する
-    *  java.io.Fileでファイルを読み込み、jax-rs Responseにて添付ファイル形式でPDFデータを送信する
-    *  Httpタイプ　application/pdf
-    */    
-    //@TokenSecurity
-    @GET
-    @Path("hokentestpdf")
-    @Produces("application/pdf")
-    public Response getHokenPdfTest() {
-        //jasperファイルと出力先のフォルダを指定。
-        String jasperPath = Const.JASPER_PATH_JLX_HOKEN_CONFIRM;
-        String outputFilePath = Const.PDF_OUTPUT_PATH_JLX_HOKEN_CONFIRM;
-        
-        /*
-        * パラメータ　ページヘッダー部固定値セット
-        * 保険会社名、担当者会社名
-        */
-        Map<String,Object> params = setJsperParamsHokenTest();
-        //フィールドデータセット(ヘッダー以下フィールド繰り返しセット処理)
-        List<DtoKanri> flist = setJasperFieldsHokenTest();
-        //帳票フィールドデータソース作成
-        JRBeanCollectionDataSource ds = new JRBeanCollectionDataSource(flist);
-
-        try{           
-            //抽象レポートを生成する。
-            JasperPrint pdf = JasperFillManager.fillReport(jasperPath, params, ds);
-            
-            //PDFファイルに出力する。
-            JasperExportManager.exportReportToPdfFile(pdf, outputFilePath);
-
-        }catch(Exception e){
-            throw new RuntimeException(e);
-        }
-        
-    
-        File file = new File(outputFilePath);
-
-        Response.ResponseBuilder response = Response.ok((Object) file);
-        response.header("Content-Disposition",
-                "attachment; filename=ukewatashi_testA4.pdf");
-        return response.build();
-        
-    }
-    
-    /*debugテスト用
-    *   確認書印刷用パラメータセットメソッド
-    *   
-    */
-    private Map<String,Object> setJsperParamsHokenTest() {
-        Map<String,Object> params = new HashMap<String,Object>();
-        params.put("tantoushaKaisha", Const.PRT_JLX_HS_HOKEN);
-        params.put("hokengaisha", "Aflac");
-        
-        return params;
-    }
-    
-    /*debugテスト用
-    *   確認書印刷用フィールド値セットメソッド
-    *   
-    */
-    private List<DtoKanri> setJasperFieldsHokenTest() {
-        
-        List<DtoKanri> list = new ArrayList<DtoKanri>();
-        DtoKanri fDto = new DtoKanri();        
-        fDto.setId(257074L);                                                // Kanri.ID
-        fDto.setShoukenbango("111111");                                     // Kanri.shoukenbango
-        fDto.setKeiyakusha("テスト契約者");                                   // Kanri.keiyakusya
-        fDto.setKubun("契約書申込書");                                        // Kanri.kubun
-        fDto.setOkShoruiIchiran("[電話募集確認書]");                           // Kanri.okShoruiIchiran
-        fDto.setTantousha("管理者ユーザー");                                   // Kanri.tantousha
-        fDto.setShinseisha("管理者ユーザー");                                  // Kanri.shinseisha
-        fDto.setHokenTantou("有賀　豪");                                      // Kanri.hokenTantou
-        fDto.setKakuninbi("2020/05/25 13:55:42");                           // Kanri.kakuninbi
-        fDto.setShoruiMaisu(1L);                                            // Kanri.shoruiMaisu
-        fDto.setBikou("備考欄テストテスト");                                   // Kanri.bikou
-        list.add(fDto);
-        
-        return list;
-    }
-    //--------------------------------------------------------------------------------------------------------
-    
     /*
     *   確認書印刷前、印刷データ有無チェック。件数を返す。
     */
@@ -1110,8 +782,8 @@ public class KanriFacadeREST extends AbstractFacade<Kanri> {
     private Map<String,Object> setJsperParamsHoken(Kanri kanri) {
         Map<String,Object> params = new HashMap<String,Object>();
         // 入力担当者会社名セット
-        String tantoushaKaisha = kanri.getTantoushaKaisha();
-        if (Objects.equals(tantoushaKaisha, Const.JLX_HOKEN)) {
+        String shinseishaKaisha = kanri.getShinseishaKaisha();
+        if (Objects.equals(shinseishaKaisha, Const.JLX_HOKEN)) {
             params.put("tantoushaKaisha", Const.PRT_JLX_HOKEN);
         } else {
             params.put("tantoushaKaisha", Const.PRT_JLX_HS_HOKEN);
@@ -1247,6 +919,352 @@ public class KanriFacadeREST extends AbstractFacade<Kanri> {
         return chkList;
     }
     
+    @Override
+    protected EntityManager getEntityManager() {
+        return em;
+    }
+    
+    
+    //--------------------------------------------------------------------------------------------
+    //  以下debug、テスト用メソッド
+    //--------------------------------------------------------------------------------------------
+    /*
+    *   テスト用メソッド　IDをIN指定GET
+    */
+    @TokenSecurity
+    @GET
+    @Path("test")
+    @Produces({"application/json"})
+    public List<Kanri> testGetKanri() {
+        Long[] ids = { 257097L, 257090L, 257086L };
+        List<Long> idsList = new ArrayList<Long>(Arrays.asList(ids));
+        // 名前付きクエリSELECT IN検索
+        TypedQuery<Kanri> q;
+        q = getEntityManager().createNamedQuery("Kanri.findByIds", Kanri.class);
+        q.setParameter("ids", idsList);
+        
+        return q.getResultList();
+    }
+    
+    /*
+    *  JasperReport帳票　PDF出力テスト用
+    *　DtoKanriへデータをセット、指定パスの帳票からJasperExportManagerが指定パスにPDFを作成する
+    *  java.io.Fileでファイルを読み込み、jax-rs Responseにて添付ファイル形式でPDFデータを送信する
+    *  Httpタイプ　application/pdf
+    */
+    @TokenSecurity
+    @GET
+    @Path("testpdf")
+    @Produces("application/pdf")
+    public Response getPdfTest() {
+        //jasperファイルと出力先のフォルダを指定。
+        String jasperPath = "/Users/great_kaneko/NetBeansProjects/Ukewatashi/web/japsper/JLX_report.jasper";
+        //String outputFilePath = "/Users/great_kaneko/NetBeansProjects/Ukewatashi/web/pdf/ukewatashi_testA4.pdf";
+        String outputFilePath = "/Users/great_kaneko/NetBeansProjects/pdf/ukewatashi_testA4.pdf";
+        
+        //Long firstId = 257101L;
+        //Kanri fKanri = super.find(firstId);
+        Long[] ids = {257090L, 257086L };
+        List<Long> idsList = new ArrayList<Long>(Arrays.asList(ids));
+        // 名前付きクエリSELECT IN検索
+        TypedQuery<Kanri> q;
+        q = getEntityManager().createNamedQuery("Kanri.findByIds", Kanri.class);
+        q.setParameter("ids", idsList);
+        List<Kanri> kanriList = q.getResultList();
+        Iterator<Kanri> kanriIterator = kanriList.iterator();
+        Kanri fKanri = kanriIterator.next();
+        /*
+        * パラメータ　ページヘッダー部固定値セット
+        * 担当者会社名、入力担当者、受渡方法、保険会社名、保険担当者名
+        */
+        Map<String,Object> params = setJsperParams(fKanri);
+        //フィールドデータセット(ヘッダー以下フィールド繰り返しセット処理)
+        List<DtoKanri> flist = setJasperFields(kanriList);
+        //帳票フィールドデータソース作成
+        JRBeanCollectionDataSource ds = new JRBeanCollectionDataSource(flist);
+
+        try{
+            
+            //抽象レポートを生成する。
+            JasperPrint pdf = JasperFillManager.fillReport(jasperPath, params, ds);
+            
+            //PDFファイルに出力する。
+            JasperExportManager.exportReportToPdfFile(pdf, outputFilePath);
+
+        }catch(Exception e){
+            throw new RuntimeException(e);
+        }
+        
+    
+        File file = new File(outputFilePath);
+
+        Response.ResponseBuilder response = Response.ok((Object) file);
+        response.header("Content-Disposition",
+                "attachment; filename=ukewatashi_testA4.pdf");
+        return response.build();
+        
+    }
+    
+    /*出力debugテスト用
+    *  JasperReport帳票　確認書印刷PDF
+    *　DtoKanriへデータをセット、指定パスの帳票からJasperExportManagerが指定パスにPDFを作成する
+    *  java.io.Fileでファイルを読み込み、jax-rs Responseにて添付ファイル形式でPDFデータを送信する
+    *  Httpタイプ　application/pdf
+    */    
+    //@TokenSecurity
+    @GET
+    @Path("hokentestpdf")
+    @Produces("application/pdf")
+    public Response getHokenPdfTest() {
+        //jasperファイルと出力先のフォルダを指定。
+        String jasperPath = Const.JASPER_PATH_JLX_HOKEN_CONFIRM;
+        String outputFilePath = Const.PDF_OUTPUT_PATH_JLX_HOKEN_CONFIRM;
+        
+        /*
+        * パラメータ　ページヘッダー部固定値セット
+        * 保険会社名、担当者会社名
+        */
+        Map<String,Object> params = setJsperParamsHokenTest();
+        //フィールドデータセット(ヘッダー以下フィールド繰り返しセット処理)
+        List<DtoKanri> flist = setJasperFieldsHokenTest();
+        //帳票フィールドデータソース作成
+        JRBeanCollectionDataSource ds = new JRBeanCollectionDataSource(flist);
+
+        try{           
+            //抽象レポートを生成する。
+            JasperPrint pdf = JasperFillManager.fillReport(jasperPath, params, ds);
+            
+            //PDFファイルに出力する。
+            JasperExportManager.exportReportToPdfFile(pdf, outputFilePath);
+
+        }catch(Exception e){
+            throw new RuntimeException(e);
+        }
+        
+    
+        File file = new File(outputFilePath);
+
+        Response.ResponseBuilder response = Response.ok((Object) file);
+        response.header("Content-Disposition",
+                "attachment; filename=ukewatashi_testA4.pdf");
+        return response.build();
+        
+    }
+    
+    /*debugテスト用
+    *   確認書印刷用パラメータセットメソッド
+    *   
+    */
+    private Map<String,Object> setJsperParamsHokenTest() {
+        Map<String,Object> params = new HashMap<String,Object>();
+        params.put("tantoushaKaisha", Const.PRT_JLX_HS_HOKEN);
+        params.put("hokengaisha", "Aflac");
+        
+        return params;
+    }
+    
+    /*debugテスト用
+    *   確認書印刷用フィールド値セットメソッド
+    *   
+    */
+    private List<DtoKanri> setJasperFieldsHokenTest() {
+        
+        List<DtoKanri> list = new ArrayList<DtoKanri>();
+        DtoKanri fDto = new DtoKanri();        
+        fDto.setId(257074L);                                                // Kanri.ID
+        fDto.setShoukenbango("111111");                                     // Kanri.shoukenbango
+        fDto.setKeiyakusha("テスト契約者");                                   // Kanri.keiyakusya
+        fDto.setKubun("契約書申込書");                                        // Kanri.kubun
+        fDto.setOkShoruiIchiran("[電話募集確認書]");                           // Kanri.okShoruiIchiran
+        fDto.setTantousha("管理者ユーザー");                                   // Kanri.tantousha
+        fDto.setShinseisha("管理者ユーザー");                                  // Kanri.shinseisha
+        fDto.setHokenTantou("有賀　豪");                                      // Kanri.hokenTantou
+        fDto.setKakuninbi("2020/05/25 13:55:42");                           // Kanri.kakuninbi
+        fDto.setShoruiMaisu(1L);                                            // Kanri.shoruiMaisu
+        fDto.setBikou("備考欄テストテスト");                                   // Kanri.bikou
+        list.add(fDto);
+        
+        return list;
+    }
+    
+    //PDF出力デモテスト
+    /* vesion2
+    @TokenSecurity
+    @GET
+    @Path("testpdf")
+    @Produces("application/pdf")
+    public Response getPdf() {
+        //jasperファイルと出力先のフォルダを指定。
+        String jasperPath = "/Users/great_kaneko/NetBeansProjects/Ukewatashi/web/japsper/Ukewatashi_A4test.jasper";
+        //String outputFilePath = "/Users/great_kaneko/NetBeansProjects/Ukewatashi/web/pdf/ukewatashi_testA4.pdf";
+        String outputFilePath = "/Users/great_kaneko/NetBeansProjects/pdf/ukewatashi_testA4.pdf";
+        
+        //印刷対象の受渡書類レコード指定
+        Long[] ids = {257078L, 257079L, 257081L};
+        List<Long> idsList = new ArrayList<Long>(Arrays.asList(ids)); //配列List化
+        //最初の要素(第１帳票)をListから取り出し要素削除
+        Iterator<Long> iterator = idsList.iterator();
+        Long firstId = iterator.next();
+        iterator.remove();
+        Kanri fKanri = super.find(firstId);
+        DtoKanri fDto = new DtoKanri();
+        List<DtoKanri> flist = new ArrayList<DtoKanri>();
+        fDto.setId(fKanri.getId());
+        fDto.setHokengaisha(fKanri.getHokengaisha());
+        fDto.setKeiyakusha(fKanri.getKeiyakusha());    
+        flist.add(fDto);
+        // 第1帳票を作成後、複数帳票印刷の時、ページ結合する
+        try {
+            // 1ページ目(単一帳票)帳票データソース作成
+            JRBeanCollectionDataSource fDs = new JRBeanCollectionDataSource(flist);
+            //パラメータ設定用（今回は使いません。）
+            Map<String,Object> fParams = new HashMap<String,Object>();
+            //抽象レポートを生成する。
+            JasperPrint pdf = JasperFillManager.fillReport(jasperPath, fParams, fDs);
+            
+            //単複帳票の時、ページ結合化
+            idsList.forEach(id->{
+                Kanri kanri = super.find(id);
+                DtoKanri dto = new DtoKanri();
+                List<DtoKanri> vlist = new ArrayList<DtoKanri>();
+                dto.setId(kanri.getId());
+                dto.setHokengaisha(kanri.getHokengaisha());
+                dto.setKeiyakusha(kanri.getKeiyakusha());    
+                vlist.add(dto);
+                // 帳票データソース作成
+                JRBeanCollectionDataSource ds = new JRBeanCollectionDataSource(vlist);
+                //パラメータ設定用（今回は使いません。）
+                Map<String,Object> params = new HashMap<String,Object>();
+                try {
+                //複数PDF作成　2帳票目以降としてPDFページオブジェクト
+                List<JRPrintPage> pages = null;
+                //2帳票目以降の抽象レポートを生成する。
+                JasperPrint pdf_other = JasperFillManager.fillReport(jasperPath, params, ds);
+                //2帳票目以降を最初のPDFへページ結合
+                pages = pdf_other.getPages();
+                for(JRPrintPage page : pages ){
+                   pdf.addPage(page);
+                }
+                } catch(Exception e){
+                    throw new RuntimeException(e);
+                }
+            });
+
+            //PDFファイルに出力する。
+            JasperExportManager.exportReportToPdfFile(pdf, outputFilePath);
+            
+        }catch(Exception e){
+            throw new RuntimeException(e);
+        }
+        /*
+        JRBeanCollectionDataSource ds = new JRBeanCollectionDataSource(vlist);
+        //test line　複数ページ作成　データソースインスタンス別に作成必要
+        JRBeanCollectionDataSource ds2 = new JRBeanCollectionDataSource(vlist);
+        
+        //パラメータ設定用（今回は使いません。）
+	Map<String,Object> params = new HashMap<String,Object>();
+        //jasperファイルと出力先のフォルダを指定。
+        String jasperPath = "/Users/great_kaneko/NetBeansProjects/Ukewatashi/web/japsper/Ukewatashi_A4test.jasper";
+        //String outputFilePath = "/Users/great_kaneko/NetBeansProjects/Ukewatashi/web/pdf/ukewatashi_testA4.pdf";
+        String outputFilePath = "/Users/great_kaneko/NetBeansProjects/pdf/ukewatashi_testA4.pdf";
+        
+        try{
+            //複数PDF作成　PDFページ結合
+            List<JRPrintPage> pages = null;
+            
+            //抽象レポートを生成する。
+            JasperPrint pdf = JasperFillManager.fillReport(jasperPath, params, ds);
+
+            //2つ目PDFデータ作成　作成ページを1つ目に結合
+            JasperPrint pdf2 = JasperFillManager.fillReport(jasperPath, params, ds2);
+            pages = pdf2.getPages();
+            for(JRPrintPage page : pages ){
+               pdf.addPage(page);
+            }
+            
+            //PDFファイルに出力する。
+            JasperExportManager.exportReportToPdfFile(pdf, outputFilePath);
+
+        }catch(Exception e){
+            throw new RuntimeException(e);
+        }
+        */
+    /*
+        File file = new File(outputFilePath);
+
+        Response.ResponseBuilder response = Response.ok((Object) file);
+        response.header("Content-Disposition",
+                "attachment; filename=ukewatashi_testA4.pdf");
+        return response.build();
+        
+    }
+    */
+    
+    /* version1
+    @TokenSecurity
+    @GET
+    @Path("testpdf")
+    @Produces("application/pdf")
+    public Response getPdf() {
+        
+        List<Kanri> list = super.findAll();
+        List<DtoKanri> vlist = new ArrayList<DtoKanri>();
+        list.forEach(v->{
+            DtoKanri dto = new DtoKanri();
+            dto.setId(v.getId());
+            dto.setHokengaisha(v.getHokengaisha());
+            dto.setKeiyakusha(v.getKeiyakusha());    
+            vlist.add(dto);
+        });
+        vlist.forEach(v->{
+            // System.out.println( v.getName());
+        });
+        
+        JRBeanCollectionDataSource ds = new JRBeanCollectionDataSource(vlist);
+        //test line　複数ページ作成　データソースインスタンス別に作成必要
+        JRBeanCollectionDataSource ds2 = new JRBeanCollectionDataSource(vlist);
+        
+        //パラメータ設定用（今回は使いません。）
+	Map<String,Object> params = new HashMap<String,Object>();
+        //jasperファイルと出力先のフォルダを指定。
+        String jasperPath = "/Users/great_kaneko/NetBeansProjects/Ukewatashi/web/japsper/Ukewatashi_A4test.jasper";
+        //String outputFilePath = "/Users/great_kaneko/NetBeansProjects/Ukewatashi/web/pdf/ukewatashi_testA4.pdf";
+        String outputFilePath = "/Users/great_kaneko/NetBeansProjects/pdf/ukewatashi_testA4.pdf";
+        
+        try{
+            
+            //複数PDF作成　PDFページ結合
+            List<JRPrintPage> pages = null;
+            
+            //抽象レポートを生成する。
+            JasperPrint pdf = JasperFillManager.fillReport(jasperPath, params, ds);
+
+            //2つ目PDFデータ作成　作成ページを1つ目に結合
+            JasperPrint pdf2 = JasperFillManager.fillReport(jasperPath, params, ds2);
+            pages = pdf2.getPages();
+            for(JRPrintPage page : pages ){
+               pdf.addPage(page);
+            }
+            
+            //PDFファイルに出力する。
+            JasperExportManager.exportReportToPdfFile(pdf, outputFilePath);
+
+        }catch(Exception e){
+            throw new RuntimeException(e);
+        }
+        
+        File file = new File(outputFilePath);
+
+        Response.ResponseBuilder response = Response.ok((Object) file);
+        response.header("Content-Disposition",
+                "attachment; filename=ukewatashi_testA4.pdf");
+        return response.build();
+        
+    }
+    */
+    
+    //--------------------------------------------------------------------------------------------------------
+    
     //--------------------------------------------------------------------------------------------
     //  以下未使用メソッド
     //--------------------------------------------------------------------------------------------
@@ -1305,9 +1323,5 @@ public class KanriFacadeREST extends AbstractFacade<Kanri> {
     *
     */
 
-    @Override
-    protected EntityManager getEntityManager() {
-        return em;
-    }
     
 }
