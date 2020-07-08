@@ -919,6 +919,40 @@ public class KanriFacadeREST extends AbstractFacade<Kanri> {
         return chkList;
     }
     
+    /*
+    *  保険会社画面　確認済みに戻す処理用
+    *  Statusを1に変更する。条件指定--->IDをPOSTから取得
+    */
+    @TokenSecurity
+    @POST
+    @Path("undostatustook")
+    @Consumes({"application/json"})
+    @Produces("text/plain")
+    public Integer undoStatusToOk(RequestDto requestDto) {
+        TypedQuery<Kanri> q = getEntityManager().createNamedQuery("Kanri.undoStatusToOk", Kanri.class);
+        q.setParameter("ids", Arrays.asList(requestDto.getParamLongs()));
+        q.executeUpdate();
+        
+        return 1;
+    }
+    
+    /*
+    *  保険会社画面　未確認に戻す処理用
+    *  Statusを0、kakunisha、saishuKakuninbi、okShoruiIchiran、fubiShoruiIchiran、hokenBikouを空文字に変更する。条件指定--->IDをPOSTから取得
+    */
+    @TokenSecurity
+    @POST
+    @Path("undostatustonot")
+    @Consumes({"application/json"})
+    @Produces("text/plain")
+    public Integer undoStatusToNot(RequestDto requestDto) {
+        TypedQuery<Kanri> q = getEntityManager().createNamedQuery("Kanri.undoStatusToNot", Kanri.class);
+        q.setParameter("ids", Arrays.asList(requestDto.getParamLongs()));
+        q.executeUpdate();
+        
+        return 1;
+    }
+    
     @Override
     protected EntityManager getEntityManager() {
         return em;
