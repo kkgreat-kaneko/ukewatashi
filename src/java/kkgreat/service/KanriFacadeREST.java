@@ -822,6 +822,79 @@ public class KanriFacadeREST extends AbstractFacade<Kanri> {
     }
     
     /*
+    *  保険会社画面「再印刷」処理用(データ1件指定)　JasperReport帳票　確認書印刷PDF出力 
+    *  DtoKanriへデータをセット、指定パスの帳票からJasperExportManagerが指定パスにPDFを作成する
+    *  java.io.Fileでファイルを読み込み、jax-rs Responseにて添付ファイル形式でPDFデータを送信する
+    *  Httpタイプ　application/pdf
+    */
+    @TokenSecurity
+    @POST
+    @Path("reprinthokenconfirm")
+    @Consumes({"application/json"})
+    @Produces("application/pdf")
+    public Response rePrintHokenConfirm(Kanri kanri) {
+        //jasperファイルと出力先のフォルダを指定。
+        String jasperPath = Const.JASPER_PATH_JLX_HOKEN_CONFIRM;
+        String outputFilePath = Const.PDF_OUTPUT_PATH_JLX_HOKEN_CONFIRM;
+        
+        Kanri reprintKanri = super.find(kanri.getId());
+        List<Kanri> kanriList = new ArrayList<Kanri>(Arrays.asList(reprintKanri));
+        
+        /*
+        * パラメータ　ページヘッダー部固定値セット
+        * 保険会社名、担当者会社名
+        */
+        Map<String,Object> params = setJsperParamsHoken(kanri);
+        //フィールドデータセット(ヘッダー以下フィールド繰り返しセット処理)
+        List<DtoKanri> flist = setJasperFieldsHoken(kanriList);
+        //帳票フィールドデータソース作成
+        JRBeanCollectionDataSource ds = new JRBeanCollectionDataSource(flist);
+
+        try{
+            
+            //抽象レポートを生成する。
+            JasperPrint pdf = JasperFillManager.fillReport(jasperPath, params, ds);
+            
+            //PDFファイルに出力する。
+            JasperExportManager.exportReportToPdfFile(pdf, outputFilePath);
+
+        }catch(Exception e){
+            throw new RuntimeException(e);
+        }
+        
+        //アウトプットファイルを読み込み、レスポンスデータとして返す
+        Response responsePdf;
+        try{
+        File file = new File(outputFilePath);
+
+        Response.ResponseBuilder response = Response.ok((Object) file);
+        response.header("Content-Disposition",
+                "attachment; filename=ukewatashi_hoken_confirm.pdf");
+        responsePdf = response.build();
+        
+        }catch(Exception e){
+            throw new RuntimeException(e);
+        }
+        
+        /*
+        *  レスポンスデータを返す前に出力したリストのstatus:1--->2に一括更新
+        */
+        List<Long> ids = new ArrayList<Long>();
+        kanriList.forEach(k->{
+            ids.add(k.getId());
+        });
+        if (ids.size() > 0) {
+            TypedQuery<Kanri> q2;
+            q2 = getEntityManager().createNamedQuery("Kanri.changeStatusHokenConfirm", Kanri.class);
+            // 検索した郵送書類のidリストをセット
+            q2.setParameter("ids", ids);
+            q2.executeUpdate();
+        }
+        
+        return responsePdf;
+    }
+    
+    /*
     * データテーブルリスト用検索処理
     * Status絞込み、JLX、JLXHS、承認Status絞込み項目選択処理
     * 動的JPQLを作成して実行
