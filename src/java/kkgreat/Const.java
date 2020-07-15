@@ -43,10 +43,13 @@ public class Const {
     //public static final String PDF_OUTPUT_PATH_JLX_CHECKSHEET = "/Users/great_kaneko/NetBeansProjects/pdf/ukewatashi_testA4.pdf";
     // 開発検証機用共通パス設定/opt以下パスにファイル配置
     // チェックシート印刷用jasperファイル
-    public static final String JASPER_PATH_JLX_CHECKSHEET = "/opt/ukewatashi/jasper/JLX_report.jasper";
+    //public static final String JASPER_PATH_JLX_CHECKSHEET = "/opt/ukewatashi/jasper/JLX_report.jasper";
+    public static final String JASPER_PATH_JLX_CHECKSHEET = "/opt/ukewatashi/jasper/JLX_report_logo.jasper";
     public static final String PDF_OUTPUT_PATH_JLX_CHECKSHEET = "/opt/ukewatashi/pdf/JLX_CHECKSHEET.pdf";
-    // 確認書印刷用jasperファイル
+    public static final String IMG_PATH_JLX_CHECKSHEET = "/opt/ukewatashi/img/";
+    // 確認書印刷用jasperファイル　確認書控え印刷用jasperファイル　出力先パス
     public static final String JASPER_PATH_JLX_HOKEN_CONFIRM = "/opt/ukewatashi/jasper/hoken_report.jasper";
+    public static final String JASPER_PATH_JLX_HOKEN_CONFIRM_COPY = "/opt/ukewatashi/jasper/hoken_report_copy.jasper";
     public static final String PDF_OUTPUT_PATH_JLX_HOKEN_CONFIRM = "/opt/ukewatashi/pdf/hoken_CHECKSHEET.pdf";
     
     

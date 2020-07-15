@@ -4,6 +4,9 @@
 package kkgreat.service;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -39,6 +42,7 @@ import net.sf.jasperreports.engine.data.JRBeanCollectionDataSource;
 import kkgreat.DtoKanri;
 import net.sf.jasperreports.engine.JRPrintPage;
 import sun.awt.DisplayChangedListener;
+import kkgreat.HokengaishaList;
 
 /**
  *
@@ -464,6 +468,27 @@ public class KanriFacadeREST extends AbstractFacade<Kanri> {
         params.put("hokengaisha", kanri.getHokengaisha());
         params.put("hokenTantou", kanri.getHokenTantou());
         
+        /*
+        *  保険会社ロゴイメージパラメーターセット
+        *  保険会社名から保険会社リストテーブルを検索、IDと同期したIMGファイル名を読み込みセットする
+        *  ファイルない保険会社はロゴ出力なし 定数パスにIDと同じファイル名を配置が必須(ファイル名に拡張子は不要、画像ファイルであればOK)
+        */
+        TypedQuery<HokengaishaList> q = getEntityManager().createNamedQuery("HokengaishaList.findByHokengaisha", HokengaishaList.class);
+        q.setParameter("hokengaisha", kanri.getHokengaisha());
+        List<HokengaishaList> hokengaishaList = q.getResultList();
+        Iterator<HokengaishaList> ite_hokenlist = hokengaishaList.iterator();
+        HokengaishaList hokengaisha = ite_hokenlist.next();
+        
+        File file = new File(Const.IMG_PATH_JLX_CHECKSHEET + hokengaisha.getId().toString());
+        if (file.exists()) {
+            try {
+                InputStream logo = new FileInputStream(file);
+                params.put("logo", logo);
+            } catch(IOException e) {
+                e.printStackTrace();
+            }
+        }
+        
         return params;
     }
     
@@ -701,6 +726,7 @@ public class KanriFacadeREST extends AbstractFacade<Kanri> {
     /*
     *  JasperReport帳票　確認書印刷PDF出力
     *  DtoKanriへデータをセット、指定パスの帳票からJasperExportManagerが指定パスにPDFを作成する
+    *  本票と控えを出力する。各jasperファイルが分かれるので、ページ結合を行う。
     *  java.io.Fileでファイルを読み込み、jax-rs Responseにて添付ファイル形式でPDFデータを送信する
     *  Httpタイプ　application/pdf
     */
@@ -712,6 +738,7 @@ public class KanriFacadeREST extends AbstractFacade<Kanri> {
     public Response printHokenConfirm(Kanri kanri) {
         //jasperファイルと出力先のフォルダを指定。
         String jasperPath = Const.JASPER_PATH_JLX_HOKEN_CONFIRM;
+        String jasperPath2 = Const.JASPER_PATH_JLX_HOKEN_CONFIRM_COPY;
         String outputFilePath = Const.PDF_OUTPUT_PATH_JLX_HOKEN_CONFIRM;
         
         // 名前付きクエリ作成
@@ -728,13 +755,23 @@ public class KanriFacadeREST extends AbstractFacade<Kanri> {
         Map<String,Object> params = setJsperParamsHoken(kanri);
         //フィールドデータセット(ヘッダー以下フィールド繰り返しセット処理)
         List<DtoKanri> flist = setJasperFieldsHoken(kanriList);
-        //帳票フィールドデータソース作成
+        //帳票フィールドデータソース作成 本票用と控え用に別々に作成が必要
         JRBeanCollectionDataSource ds = new JRBeanCollectionDataSource(flist);
+        JRBeanCollectionDataSource ds2 = new JRBeanCollectionDataSource(flist);
 
         try{
             
             //抽象レポートを生成する。
             JasperPrint pdf = JasperFillManager.fillReport(jasperPath, params, ds);
+            
+            //控え用の抽象レポートを生成する。
+            JasperPrint pdfCopy = JasperFillManager.fillReport(jasperPath2, params, ds2);
+            //複数ページ　PDFページ結合
+            List<JRPrintPage> pages = null;
+            pages = pdfCopy.getPages();
+            for(JRPrintPage page : pages ){
+                pdf.addPage(page);
+            }
             
             //PDFファイルに出力する。
             JasperExportManager.exportReportToPdfFile(pdf, outputFilePath);
