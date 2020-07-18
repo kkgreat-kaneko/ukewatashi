@@ -26,6 +26,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 @NamedQueries({
     @NamedQuery(name = "Kanri.findAll", query = "SELECT k FROM Kanri k"),
     @NamedQuery(name = "Kanri.findById", query = "SELECT k FROM Kanri k WHERE k.id = :id"),
+    @NamedQuery(name = "Kanri.findByIds", query = "SELECT k FROM Kanri k WHERE k.id IN :ids"),
     @NamedQuery(name = "Kanri.defaultSelect", query = "select k from Kanri k " 
             + "where (k.tantoushaUserId = :userId OR k.shinseishaUserId = :userId) "
             //+ "and k.status in (0, 3) and k.statusApp in (0, 10) order by k.id DESC"),
