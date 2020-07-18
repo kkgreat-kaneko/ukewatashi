@@ -660,7 +660,7 @@ public class KanriFacadeREST extends AbstractFacade<Kanri> {
             JRBeanCollectionDataSource ds = new JRBeanCollectionDataSource(flist);  // 1ページとなる先頭帳票リストから印刷データソース作成
             
             //サーバーワークファイル編集処理　メモリーリークバグ防止用
-            JRFileVirtualizer virtualizer = new JRFileVirtualizer(30, System.getProperty("java.io.tmpdir"));
+            JRFileVirtualizer virtualizer = new JRFileVirtualizer(100, System.getProperty("java.io.tmpdir"));
             params.put(JRParameter.REPORT_VIRTUALIZER, virtualizer);
             
             //1ページ目抽象レポートを生成する。
@@ -691,6 +691,7 @@ public class KanriFacadeREST extends AbstractFacade<Kanri> {
             JasperExportManager.exportReportToPdfFile(pdf, outputFilePath);
             //cleaning
             pdf = null;
+            ds = null;
             params = null;
             virtualizer.cleanup();
             virtualizer = null;
@@ -777,7 +778,7 @@ public class KanriFacadeREST extends AbstractFacade<Kanri> {
 
         try{
             //サーバーワークファイル編集処理　メモリーリークバグ防止用
-            JRFileVirtualizer virtualizer = new JRFileVirtualizer(30, System.getProperty("java.io.tmpdir"));
+            JRFileVirtualizer virtualizer = new JRFileVirtualizer(100, System.getProperty("java.io.tmpdir"));
             params.put(JRParameter.REPORT_VIRTUALIZER, virtualizer);
             //抽象レポートを生成する。
             JasperPrint pdf = JasperFillManager.fillReport(jasperPath, params, ds);
@@ -795,6 +796,8 @@ public class KanriFacadeREST extends AbstractFacade<Kanri> {
             JasperExportManager.exportReportToPdfFile(pdf, outputFilePath);
             //cleaning
             pdf = null;
+            ds = null;
+            ds2 = null;
             params = null;
             virtualizer.cleanup();
             virtualizer = null;
@@ -896,6 +899,7 @@ public class KanriFacadeREST extends AbstractFacade<Kanri> {
     public Response rePrintHokenConfirm(RequestDto requestDto) {
         //jasperファイルと出力先のフォルダを指定。
         String jasperPath = Const.JASPER_PATH_JLX_HOKEN_CONFIRM;
+        String jasperPath2 = Const.JASPER_PATH_JLX_HOKEN_CONFIRM_COPY;
         String outputFilePath = Const.PDF_OUTPUT_PATH_JLX_HOKEN_CONFIRM;
         
         //Kanri reprintKanri = super.find(kanri.getId());   //単一選択印刷のみ許可の場合
@@ -916,20 +920,32 @@ public class KanriFacadeREST extends AbstractFacade<Kanri> {
         Map<String,Object> params = setJsperParamsHoken(kanri);
         //フィールドデータセット(ヘッダー以下フィールド繰り返しセット処理)
         List<DtoKanri> flist = setJasperFieldsHoken(kanriList);
-        //帳票フィールドデータソース作成
+        //帳票フィールドデータソース作成 本票用と控え用に別々に作成が必要
         JRBeanCollectionDataSource ds = new JRBeanCollectionDataSource(flist);
+        JRBeanCollectionDataSource ds2 = new JRBeanCollectionDataSource(flist);
 
         try{
             //サーバーワークファイル編集処理　メモリーリークバグ防止用
-            JRFileVirtualizer virtualizer = new JRFileVirtualizer(30, System.getProperty("java.io.tmpdir"));
+            JRFileVirtualizer virtualizer = new JRFileVirtualizer(100, System.getProperty("java.io.tmpdir"));
             params.put(JRParameter.REPORT_VIRTUALIZER, virtualizer);
             //抽象レポートを生成する。
             JasperPrint pdf = JasperFillManager.fillReport(jasperPath, params, ds);
+            
+            //控え用の抽象レポートを生成する。
+            JasperPrint pdfCopy = JasperFillManager.fillReport(jasperPath2, params, ds2);
+            //複数ページ　PDFページ結合
+            List<JRPrintPage> pages = null;
+            pages = pdfCopy.getPages();
+            for(JRPrintPage page : pages ){
+                pdf.addPage(page);
+            }
             
             //PDFファイルに出力する。
             JasperExportManager.exportReportToPdfFile(pdf, outputFilePath);
             //cleaning
             pdf = null;
+            ds = null;
+            ds2 = null;
             params = null;
             virtualizer.cleanup();
             virtualizer = null;
