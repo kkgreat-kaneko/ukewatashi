@@ -892,13 +892,22 @@ public class KanriFacadeREST extends AbstractFacade<Kanri> {
     @Path("reprinthokenconfirm")
     @Consumes({"application/json"})
     @Produces("application/pdf")
-    public Response rePrintHokenConfirm(Kanri kanri) {
+    //public Response rePrintHokenConfirm(Kanri kanri) {  //単一選択印刷のみ許可の場合
+    public Response rePrintHokenConfirm(RequestDto requestDto) {
         //jasperファイルと出力先のフォルダを指定。
         String jasperPath = Const.JASPER_PATH_JLX_HOKEN_CONFIRM;
         String outputFilePath = Const.PDF_OUTPUT_PATH_JLX_HOKEN_CONFIRM;
         
-        Kanri reprintKanri = super.find(kanri.getId());
-        List<Kanri> kanriList = new ArrayList<Kanri>(Arrays.asList(reprintKanri));
+        //Kanri reprintKanri = super.find(kanri.getId());   //単一選択印刷のみ許可の場合
+        //List<Kanri> kanriList = new ArrayList<Kanri>(Arrays.asList(reprintKanri));    //単一選択印刷のみ許可の場合
+        
+        // 名前付きクエリ作成
+        List<Long> ids = new ArrayList<Long>(Arrays.asList(requestDto.getParamLongs()));
+        TypedQuery<Kanri> q;
+        q = getEntityManager().createNamedQuery("Kanri.findByIds", Kanri.class);
+        q.setParameter("ids", ids);
+        List<Kanri> kanriList = q.getResultList();
+        Kanri kanri = kanriList.get(0);
         
         /*
         * パラメータ　ページヘッダー部固定値セット
@@ -941,21 +950,6 @@ public class KanriFacadeREST extends AbstractFacade<Kanri> {
         
         }catch(Exception e){
             throw new RuntimeException(e);
-        }
-        
-        /*
-        *  レスポンスデータを返す前に出力したリストのstatus:1--->2に一括更新
-        */
-        List<Long> ids = new ArrayList<Long>();
-        kanriList.forEach(k->{
-            ids.add(k.getId());
-        });
-        if (ids.size() > 0) {
-            TypedQuery<Kanri> q2;
-            q2 = getEntityManager().createNamedQuery("Kanri.changeStatusHokenConfirm", Kanri.class);
-            // 検索した郵送書類のidリストをセット
-            q2.setParameter("ids", ids);
-            q2.executeUpdate();
         }
         
         return responsePdf;
