@@ -19,6 +19,8 @@ import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import javax.persistence.TypedQuery;
+import javax.validation.ConstraintViolation;
+import javax.validation.ConstraintViolationException;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
@@ -247,61 +249,37 @@ public class KanriFacadeREST extends AbstractFacade<Kanri> {
         *   idの割り当ては、Kankyouテーブルkanri_maxより取得し、KanriにInsert時に同時に更新している
         *   Kanri_delにコピー保存しているので両テーブルでidの重複を防止している
         */
-        Kankyou kankyou = getEntityManager().find(Kankyou.class, 1L);
-        Long maxId = kankyou.getKanriMax();
-        maxId += 1L;
-        entity.setId(maxId);
-        super.create(entity);
-        super.flush();                      //継承クラスにflushメソッドを追加、entityManagerに即時insert発行
-        kankyou.setKanriMax(maxId);         //Kankyoテーブルkanri_max値を更新 kanri.idをセット
-        getEntityManager().merge(kankyou);
-        super.flush();
-       
-        /* NotNullは空文字''もNG 確認作業として以下
-        Kanri kanri = new Kanri();
-        kanri.setId(257079L);
-        //kanri.setId(maxId);
-        //kanri.setStatus(0L);
-        kanri.setStatus(entity.getStatus());
-        //kanri.setStatusApp(0L);
-        kanri.setStatusApp(entity.getStatusApp());
-        //kanri.setDlvry("受渡");
-        kanri.setDlvry(entity.getDlvry());
-        //kanri.setHokengaisha("AFLAC");
-        kanri.setHokengaisha(entity.getHokengaisha());
-        //kanri.setSeihobun(0L);
-        kanri.setSeihobun(entity.getSeihobun());
-        //kanri.setKeiyakusha("金子　丘");
-        kanri.setKeiyakusha(entity.getKeiyakusha());
-        //kanri.setKubun("契約書申込書");
-        kanri.setKubun(entity.getKubun());
-        //kanri.setTantoushaUserId("kanrisha");
-        kanri.setTantoushaUserId(entity.getTantoushaUserId());
-        //kanri.setTantousha("管理者ユーザー");
-        kanri.setTantousha(entity.getTantousha());
-        //kanri.setTantoushaKaisha("JLX");
-        kanri.setTantoushaKaisha(entity.getTantoushaKaisha());
-        //kanri.setTantoushaTeam("test");
-        kanri.setTantoushaTeam(entity.getTantoushaTeam());
-        kanri.setSakuseibi("2019/12/18");
-        kanri.setKubun(entity.getKubun());
-        kanri.setHokenTantou("保険担当oo");
-        kanri.setSeiho("生保");
-        kanri.setShoukenbango("222222");
-        kanri.setShinseisha("管理者ユーザー");
-        kanri.setShinseishaKaisha("JLX");
-        kanri.setShinseishaUserId("kanrisha");
-        */
-        //super.create(kanri);
-        //super.edit(kanri);
-        //super.flush();   
-        
-        Kanri findKanri = super.find(maxId);
-        Long id = findKanri.getId();
-        if (Objects.isNull(id)) {
+        try{
+            Kankyou kankyou = getEntityManager().find(Kankyou.class, 1L);
+            Long maxId = kankyou.getKanriMax();
+            maxId += 1L;
+            entity.setId(maxId);
+            super.create(entity);
+            super.flush();                      //継承クラスにflushメソッドを追加、entityManagerに即時insert発行
+            kankyou.setKanriMax(maxId);         //Kankyoテーブルkanri_max値を更新 kanri.idをセット
+            getEntityManager().merge(kankyou);
+            super.flush();
+
+
+            Kanri findKanri = super.find(maxId);
+            Long id = findKanri.getId();
+            if (Objects.isNull(id)) {
+                return null;
+            } else {
+                return super.find(id);
+            }
+        } catch(Exception ex) {
+            if (ex instanceof ConstraintViolationException) {
+                ConstraintViolationException cve = (ConstraintViolationException) ex;
+                for (ConstraintViolation cv : cve.getConstraintViolations()) {
+                  System.out.println("新規登録 例外発生 Kanri Entity バリテーションエラー発生");
+                  System.out.println("CREATE Karni ERROR CONSTRAINT VIOLOATION : " + cv.toString());
+                 }
+            } else {
+                System.out.println("新規登録 例外発生しました。");
+                System.out.println(ex);
+            }
             return null;
-        } else {
-            return super.find(id);
         }
     }
     
