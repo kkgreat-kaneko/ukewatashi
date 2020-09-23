@@ -83,7 +83,7 @@ public class KanriDelFacadeREST extends AbstractFacade<KanriDel> {
             sb.append(entity.getUserId());
             sb.append("'");
             sb.append(")");
-            System.out.println(entity.issBusho());
+            //System.out.println(entity.issBusho());
         } else if (entity.issBusho()) {
             sb.append(" where (k.shinseishaKaisha = ");
             sb.append( Utility.sqlStringFormat(entity.getTantoushaKaisha()) );
@@ -144,7 +144,7 @@ public class KanriDelFacadeREST extends AbstractFacade<KanriDel> {
         
         sb.append(" ORDER BY k.id DESC");
         query = sb.toString();
-        System.out.println(query);
+        //System.out.println(query);
         TypedQuery<KanriDel> q = getEntityManager().createQuery(query, KanriDel.class);
         q.setFirstResult(0);
         q.setMaxResults(entity.getLimit());

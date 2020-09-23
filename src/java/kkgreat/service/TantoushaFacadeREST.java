@@ -63,7 +63,7 @@ public class TantoushaFacadeREST extends AbstractFacade<Tantousha> {
                 }
             }
         }
-        System.out.println("login fail");
+        //System.out.println("login fail");
         return null;
     }
     

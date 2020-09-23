@@ -20,8 +20,8 @@ import javax.ws.rs.Produces;
 import kkgreat.Fubi;
 
 /**
- *
- * @author great_kaneko
+ * 未使用、不備書類を管理していた旧システムテーブル
+ * 
  */
 @Stateless
 @Path("kkgreat.fubi")
