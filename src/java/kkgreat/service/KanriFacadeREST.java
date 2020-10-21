@@ -7,8 +7,10 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -539,11 +541,11 @@ public class KanriFacadeREST extends AbstractFacade<Kanri> {
     @Consumes({"application/json"})
     public Response printCheckSheet(List<Kanri> list) {
         //jasperファイルと出力先のフォルダを指定。環境によって適宜変更 -->const定義に変更予定
-        //String jasperPath = "/Users/great_kaneko/NetBeansProjects/Ukewatashi/web/japsper/JLX_report.jasper";
-        //String outputFilePath = "/Users/great_kaneko/NetBeansProjects/pdf/ukewatashi_testA4.pdf";
         String jasperPath = Const.JASPER_PATH_JLX_CHECKSHEET;
-        String outputFilePath = Const.PDF_OUTPUT_PATH_JLX_CHECKSHEET;
-        
+        Date date = new Date();
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMddhhmmssS");
+        String outputFilePath = Const.PDF_OUTPUT_PATH_JLX_CHECKSHEET + sdf.format(date) + ".pdf";
+               
         /*
         *   受信データを帳票出力データとして配列化(同じ処理をAngularでも表示処理時に実行 2次元リスト構造の受渡しできない為)
         *
@@ -734,7 +736,9 @@ public class KanriFacadeREST extends AbstractFacade<Kanri> {
         //jasperファイルと出力先のフォルダを指定。
         String jasperPath = Const.JASPER_PATH_JLX_HOKEN_CONFIRM;
         String jasperPath2 = Const.JASPER_PATH_JLX_HOKEN_CONFIRM_COPY;
-        String outputFilePath = Const.PDF_OUTPUT_PATH_JLX_HOKEN_CONFIRM;
+        Date date = new Date();
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMddhhmmssS");
+        String outputFilePath = Const.PDF_OUTPUT_PATH_JLX_HOKEN_CONFIRM + sdf.format(date) + ".pdf";
         
         // 名前付きクエリ作成
         TypedQuery<Kanri> q;
@@ -878,7 +882,9 @@ public class KanriFacadeREST extends AbstractFacade<Kanri> {
         //jasperファイルと出力先のフォルダを指定。
         String jasperPath = Const.JASPER_PATH_JLX_HOKEN_CONFIRM;
         String jasperPath2 = Const.JASPER_PATH_JLX_HOKEN_CONFIRM_COPY;
-        String outputFilePath = Const.PDF_OUTPUT_PATH_JLX_HOKEN_CONFIRM;
+        Date date = new Date();
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMddhhmmssS");
+        String outputFilePath = Const.PDF_OUTPUT_PATH_JLX_HOKEN_CONFIRM + sdf.format(date) + ".pdf";
         
         //Kanri reprintKanri = super.find(kanri.getId());   //単一選択印刷のみ許可の場合
         //List<Kanri> kanriList = new ArrayList<Kanri>(Arrays.asList(reprintKanri));    //単一選択印刷のみ許可の場合
@@ -1180,12 +1186,12 @@ public class KanriFacadeREST extends AbstractFacade<Kanri> {
     public Response getHokenPdfTest() {
         //jasperファイルと出力先のフォルダを指定。
         String jasperPath = Const.JASPER_PATH_JLX_HOKEN_CONFIRM;
-        String outputFilePath = Const.PDF_OUTPUT_PATH_JLX_HOKEN_CONFIRM;
+        String outputFilePath = "/opt/ukewatashi/pdf/hoken_CHECKSHEET.pdf";
         
         /*
         * パラメータ　ページヘッダー部固定値セット
         * 保険会社名、担当者会社名
-        */
+        */   
         Map<String,Object> params = setJsperParamsHokenTest();
         //フィールドデータセット(ヘッダー以下フィールド繰り返しセット処理)
         List<DtoKanri> flist = setJasperFieldsHokenTest();
